@@ -117,6 +117,7 @@ function LiveCalls() {
 
       <div className="mb-6">
         <AiVoiceCall />
+        <LiveVoiceChat />
       </div>
 
       <div className="mb-6 rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
