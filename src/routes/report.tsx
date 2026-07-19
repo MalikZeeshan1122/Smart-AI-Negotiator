@@ -293,6 +293,7 @@ function Report() {
                 <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground mt-2">
                   — {best.company} · {winningTurn.ts}
                 </div>
+                <TranscriptAudio text={winningTurn.text} role={winningTurn.role} label="evidence quote" />
               </div>
             </div>
           )}
