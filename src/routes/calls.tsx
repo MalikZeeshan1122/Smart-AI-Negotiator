@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useEffect, useMemo, useState } from "react";
 import { TranscriptAudio } from "@/components/transcript-audio";
 import { TwilioSmsStatus } from "@/components/twilio-sms-status";
+import { AiVoiceCall } from "@/components/ai-voice-call";
 
 export const Route = createFileRoute("/calls")({
   head: () => ({
@@ -112,6 +113,10 @@ function LiveCalls() {
       </div>
 
       <TwilioSmsStatus />
+
+      <div className="mb-6">
+        <AiVoiceCall />
+      </div>
 
       <div className="mb-6 rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
         <ShieldCheck className="size-4 text-primary shrink-0 mt-0.5" />
