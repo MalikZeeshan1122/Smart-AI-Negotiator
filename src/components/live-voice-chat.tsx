@@ -228,6 +228,8 @@ function LiveVoiceChatInner() {
         </div>
       </div>
 
+      <MicTest />
+
       <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>
           <label className="text-xs font-medium text-muted-foreground">ElevenLabs Agent ID</label>
