@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio, Bot, User, ShieldCheck } from "lucide-react";
 import { readVoiceSettings } from "@/lib/voice-settings";
 import { VerifyNumberModal, isUnverifiedNumberError } from "@/components/verify-number-modal";
+import { SPEECH_LANGUAGES } from "@/lib/twiml-utils";
 
 const TERMINAL = new Set(["completed", "failed", "busy", "no-answer", "canceled"]);
 const DEFAULT_FROM = "+14472288335";
@@ -29,6 +30,7 @@ export function AiVoiceCall({
   const [from, setFrom] = useState(DEFAULT_FROM);
   const [script, setScript] = useState(defaultScript);
   const [context, setContext] = useState(defaultContext);
+  const [language, setLanguage] = useState<string>("en-US");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [call, setCall] = useState<{
@@ -134,6 +136,7 @@ export function AiVoiceCall({
           speed: vs.speed,
           context: context.trim(),
           maxTurns: 8,
+          language,
         },
       });
       if (!r.ok) {
@@ -191,6 +194,26 @@ export function AiVoiceCall({
         <div>
           <label className="text-xs font-medium text-muted-foreground">To (business)</label>
           <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder="+15551234567" />
+        </div>
+      </div>
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">
+          Rep's spoken language (what Twilio listens for)
+        </label>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          {SPEECH_LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.label} ({l.code})
+            </option>
+          ))}
+        </select>
+        <div className="mt-1 text-[10px] text-muted-foreground">
+          Pick the language the person on the other end will speak — if they speak Urdu but this is
+          set to English, Twilio won't understand them and the AI will loop.
         </div>
       </div>
       <div>

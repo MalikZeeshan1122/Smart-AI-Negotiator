@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { clearState, ensureState, esc, getState, type Turn } from "@/lib/twiml-utils";
+import { clearState, ensureState, esc, gatherOpenTag, normalizeLanguage, getState, type Turn } from "@/lib/twiml-utils";
 
 async function draftReply(
   ctx: string,
@@ -63,6 +63,7 @@ function buildTwiml(opts: {
   voiceId: string;
   speed: string;
   nextUrl: string | null;
+  lang: string;
 }) {
   const q = new URLSearchParams({ text: opts.reply });
   if (opts.voiceId) q.set("voiceId", opts.voiceId);
@@ -82,7 +83,7 @@ function buildTwiml(opts: {
   // the instant the assistant finishes speaking — feels natural, not scripted.
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="${esc(opts.nextUrl)}" method="POST" speechTimeout="auto" timeout="8" language="en-US" speechModel="phone_call" enhanced="true" actionOnEmptyResult="true" bargeIn="true">
+  ${gatherOpenTag(opts.nextUrl, opts.lang)}
     <Play>${esc(playUrl)}</Play>
   </Gather>
 </Response>`;
@@ -102,6 +103,7 @@ export const Route = createFileRoute("/api/public/voice-turn")({
         const voiceId = url.searchParams.get("voiceId") ?? "";
         const speed = url.searchParams.get("speed") ?? "";
         const maxTurns = Math.max(2, Math.min(20, Number(url.searchParams.get("maxTurns") ?? "8")));
+        const lang = normalizeLanguage(url.searchParams.get("lang"));
         const origin = `${url.protocol}//${url.host}`;
 
         const state = ensureState(callSid, ctx);
@@ -136,9 +138,10 @@ export const Route = createFileRoute("/api/public/voice-turn")({
         if (voiceId) nextParams.set("voiceId", voiceId);
         if (speed) nextParams.set("speed", speed);
         nextParams.set("maxTurns", String(maxTurns));
+        nextParams.set("lang", lang);
         const nextUrl = end ? null : `${origin}/api/public/voice-turn?${nextParams.toString()}`;
 
-        const xml = buildTwiml({ origin, reply, voiceId, speed, nextUrl });
+        const xml = buildTwiml({ origin, reply, voiceId, speed, nextUrl, lang });
         if (end) {
           // keep transcript accessible for a bit before clearing
           setTimeout(() => clearState(callSid), 5 * 60_000);
