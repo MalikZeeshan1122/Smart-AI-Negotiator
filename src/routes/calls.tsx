@@ -338,6 +338,7 @@ function LiveCalls() {
                       >
                         {t.text}
                       </div>
+                      <TranscriptAudio text={t.text} role={t.role} label={`${t.role} at ${t.ts}`} />
                     </div>
                   </div>
                 ))}
