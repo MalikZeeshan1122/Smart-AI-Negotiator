@@ -43,6 +43,7 @@ export function AiVoiceCall({
     Array<{ sid: string; url: string; duration: string | null; dateCreated: string; status: string }>
   >([]);
   const feedRef = useRef<HTMLDivElement | null>(null);
+  const [verifyOpen, setVerifyOpen] = useState(false);
 
   useEffect(() => {
     if (!call || TERMINAL.has(call.status)) return;
