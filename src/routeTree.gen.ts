@@ -15,6 +15,7 @@ import { Route as NewRouteImport } from './routes/new'
 import { Route as DryRunRouteImport } from './routes/dry-run'
 import { Route as CallsRouteImport } from './routes/calls'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicTwimlRouteImport } from './routes/api/public/twiml'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
 
 const ReportRoute = ReportRouteImport.update({
@@ -47,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTwimlRoute = ApiPublicTwimlRouteImport.update({
+  id: '/api/public/twiml',
+  path: '/api/public/twiml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   id: '/api/public/tts',
   path: '/api/public/tts',
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
+  '/api/public/twiml': typeof ApiPublicTwimlRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
+  '/api/public/twiml': typeof ApiPublicTwimlRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
+  '/api/public/twiml': typeof ApiPublicTwimlRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/report'
     | '/api/public/tts'
+    | '/api/public/twiml'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/report'
     | '/api/public/tts'
+    | '/api/public/twiml'
   id:
     | '__root__'
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/report'
     | '/api/public/tts'
+    | '/api/public/twiml'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   QuotesRoute: typeof QuotesRoute
   ReportRoute: typeof ReportRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
+  ApiPublicTwimlRoute: typeof ApiPublicTwimlRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/twiml': {
+      id: '/api/public/twiml'
+      path: '/api/public/twiml'
+      fullPath: '/api/public/twiml'
+      preLoaderRoute: typeof ApiPublicTwimlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/tts': {
       id: '/api/public/tts'
       path: '/api/public/tts'
@@ -183,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuotesRoute: QuotesRoute,
   ReportRoute: ReportRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
+  ApiPublicTwimlRoute: ApiPublicTwimlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
