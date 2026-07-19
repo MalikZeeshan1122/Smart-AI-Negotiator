@@ -30,6 +30,7 @@ export function AiVoiceCall({
   const [from, setFrom] = useState(DEFAULT_FROM);
   const [script, setScript] = useState(defaultScript);
   const [context, setContext] = useState(defaultContext);
+  const [language, setLanguage] = useState<string>("en-US");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [call, setCall] = useState<{
