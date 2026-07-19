@@ -109,6 +109,8 @@ function NewNegotiation() {
   const [step, setStep] = useState(1);
   const [service, setService] = useState("moving");
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [ocr, setOcr] = useState<Record<string, OcrResult>>({});
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -133,11 +135,35 @@ function NewNegotiation() {
         type: f.type,
       });
     }
-    if (accepted.length) setFiles((prev) => [...prev, ...accepted]);
+    if (accepted.length) {
+      setFiles((prev) => [...prev, ...accepted]);
+      // Kick off mock OCR — mark processing immediately, resolve after a short delay.
+      setOcr((prev) => {
+        const next = { ...prev };
+        for (const f of accepted) {
+          next[f.id] = { status: "processing", text: "", fields: [] };
+        }
+        return next;
+      });
+      setSelectedFileId((cur) => cur ?? accepted[0].id);
+      accepted.forEach((f, i) => {
+        const delay = 700 + i * 350 + Math.random() * 400;
+        setTimeout(() => {
+          setOcr((prev) => ({ ...prev, [f.id]: mockOcrFor(f) }));
+        }, delay);
+      });
+    }
   };
 
-  const removeFile = (id: string) =>
+  const removeFile = (id: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
+    setOcr((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setSelectedFileId((cur) => (cur === id ? null : cur));
+  };
 
   return (
     <AppShell>
