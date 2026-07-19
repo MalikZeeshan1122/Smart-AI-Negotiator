@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio, Bot, User, ShieldCheck } from "lucide-react";
 import { readVoiceSettings } from "@/lib/voice-settings";
 import { VerifyNumberModal, isUnverifiedNumberError } from "@/components/verify-number-modal";
+import { SPEECH_LANGUAGES } from "@/lib/twiml-utils";
 
 const TERMINAL = new Set(["completed", "failed", "busy", "no-answer", "canceled"]);
 const DEFAULT_FROM = "+14472288335";
