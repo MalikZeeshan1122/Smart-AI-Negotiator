@@ -24,8 +24,12 @@ import {
   ShieldCheck,
   Lock,
   CheckCircle2,
+  FileArchive,
+  Fingerprint,
+  Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { buildAuditBundle, downloadAuditBundle } from "@/lib/audit-bundle";
 
 export const Route = createFileRoute("/report")({
   head: () => ({
