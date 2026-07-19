@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, Download, Loader2, AlertCircle } from "lucide-react";
 import { ttsUrl } from "@/lib/tts-url";
+import { useVoiceSettings } from "@/lib/voice-settings";
 
 type Props = {
   text: string;
@@ -13,9 +14,17 @@ type Props = {
 export function TranscriptAudio({ text, role, label }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [state, setState] = useState<"idle" | "loading" | "playing" | "error">("idle");
+  // Subscribe so URL updates when user changes voice/speed.
+  useVoiceSettings();
   const url = ttsUrl(text, role);
 
+  useEffect(() => {
+    audioRef.current?.pause();
+    setState("idle");
+  }, [url]);
+
   useEffect(() => () => audioRef.current?.pause(), []);
+
 
   const toggle = async () => {
     const el = audioRef.current;
