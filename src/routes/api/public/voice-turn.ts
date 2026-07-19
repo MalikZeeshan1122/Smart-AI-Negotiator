@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { chunk, clearState, ensureState, esc, getState, type Turn } from "@/lib/twiml-utils";
+import { clearState, ensureState, esc, getState, type Turn } from "@/lib/twiml-utils";
 
 async function draftReply(
   ctx: string,
@@ -105,10 +105,29 @@ export const Route = createFileRoute("/api/public/voice-turn")({
         const origin = `${url.protocol}//${url.host}`;
 
         const state = ensureState(callSid, ctx);
-        if (speech) state.turns.push({ role: "user", content: speech, at: Date.now() });
+        if (speech) {
+          state.turns.push({ role: "user", content: speech, at: Date.now() });
+          state.emptyStreak = 0;
+        } else {
+          state.emptyStreak = (state.emptyStreak ?? 0) + 1;
+        }
         state.count++;
 
-        const { text: reply, end: modelEnd } = await draftReply(state.ctx || ctx, state.turns);
+        // If the other side has been silent for 2 gathers in a row, stop
+        // monologuing — say one closing line and hang up. This is the main
+        // fix for "AI keeps repeating itself to hold music / voicemail".
+        const silenceEnd = state.emptyStreak >= 2;
+
+        let reply: string;
+        let modelEnd = false;
+        if (silenceEnd) {
+          reply = "I'm not hearing anyone on the line. I'll try again later. Thank you.";
+          modelEnd = true;
+        } else {
+          const r = await draftReply(state.ctx || ctx, state.turns);
+          reply = r.text;
+          modelEnd = r.end;
+        }
         state.turns.push({ role: "assistant", content: reply, at: Date.now() });
         const end = modelEnd || state.count >= maxTurns;
 
