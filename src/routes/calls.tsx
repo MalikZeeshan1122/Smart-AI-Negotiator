@@ -150,6 +150,11 @@ function LiveCalls() {
                     <div className="text-sm mono tabular-nums">
                       ${q.finalPrice.toLocaleString()}
                     </div>
+                  ) : (scheduleMode[q.id] ?? "now") === "later" ? (
+                    <span className="mono text-[10px] uppercase tracking-widest text-primary flex items-center gap-1">
+                      <CalendarClock className="size-3" />
+                      {formatSchedule(schedules[q.id])}
+                    </span>
                   ) : (
                     <span className="mono text-[10px] uppercase tracking-widest text-warning flex items-center gap-1">
                       <Lock className="size-3" />
@@ -167,7 +172,11 @@ function LiveCalls() {
             <div>
               <div className="text-base font-semibold">{quote.company}</div>
               <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">
-                {isApproved ? "Call transcript · streamed live" : "Awaiting your approval to dial"}
+                {isApproved
+                  ? "Call transcript · streamed live"
+                  : mode === "later"
+                    ? `Scheduled for ${formatSchedule(scheduledFor)}`
+                    : "Awaiting your approval to dial"}
               </div>
             </div>
             <div className="flex items-center gap-3">
