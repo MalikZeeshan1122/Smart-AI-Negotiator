@@ -81,7 +81,7 @@ export async function buildAuditBundle(job: Job): Promise<AuditBundle> {
       company: q.company,
       phone: q.phone,
       callDurationSec: q.callDurationSec,
-      turns: q.transcript,
+      turns: q.transcript.map((t) => ({ ...t, audioUrl: ttsUrl(t.text, t.role) })),
     })),
     recordings: quotes.map((q) => ({
       quoteId: q.id,
