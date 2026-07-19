@@ -3,7 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { activeJob } from "@/lib/mock-data";
 import { TrustPill, RiskBadge } from "@/components/kit";
 import { Button } from "@/components/ui/button";
-import { PhoneCall, Bot, Building2, ShieldCheck, Lock, CheckCircle2 } from "lucide-react";
+import { PhoneCall, Bot, Building2, ShieldCheck, Lock, CheckCircle2, CalendarClock, Zap } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/calls")({
@@ -16,11 +17,38 @@ export const Route = createFileRoute("/calls")({
   component: LiveCalls,
 });
 
+function defaultSchedule() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() + 15 - (d.getMinutes() % 15));
+  d.setSeconds(0, 0);
+  // Format for datetime-local input in local time
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatSchedule(v: string) {
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return v;
+  return d.toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function LiveCalls() {
   const [selected, setSelected] = useState(activeJob.quotes[0].id);
   const [approved, setApproved] = useState<Record<string, boolean>>({});
+  const [schedules, setSchedules] = useState<Record<string, string>>(() =>
+    Object.fromEntries(activeJob.quotes.map((q) => [q.id, defaultSchedule()])),
+  );
+  const [scheduleMode, setScheduleMode] = useState<Record<string, "now" | "later">>({});
   const quote = activeJob.quotes.find((q) => q.id === selected)!;
   const isApproved = !!approved[quote.id];
+  const mode = scheduleMode[quote.id] ?? "now";
+  const scheduledFor = schedules[quote.id];
   const [visibleTurns, setVisibleTurns] = useState(0);
 
   const pendingCount = useMemo(
@@ -122,6 +150,11 @@ function LiveCalls() {
                     <div className="text-sm mono tabular-nums">
                       ${q.finalPrice.toLocaleString()}
                     </div>
+                  ) : (scheduleMode[q.id] ?? "now") === "later" ? (
+                    <span className="mono text-[10px] uppercase tracking-widest text-primary flex items-center gap-1">
+                      <CalendarClock className="size-3" />
+                      {formatSchedule(schedules[q.id])}
+                    </span>
                   ) : (
                     <span className="mono text-[10px] uppercase tracking-widest text-warning flex items-center gap-1">
                       <Lock className="size-3" />
@@ -139,7 +172,11 @@ function LiveCalls() {
             <div>
               <div className="text-base font-semibold">{quote.company}</div>
               <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">
-                {isApproved ? "Call transcript · streamed live" : "Awaiting your approval to dial"}
+                {isApproved
+                  ? "Call transcript · streamed live"
+                  : mode === "later"
+                    ? `Scheduled for ${formatSchedule(scheduledFor)}`
+                    : "Awaiting your approval to dial"}
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -177,10 +214,83 @@ function LiveCalls() {
                   can end the call at any point.
                 </p>
               </div>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="w-full max-w-md rounded-lg border border-border bg-surface/40 p-4 text-left">
+                <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground mb-3">
+                  When should the agent call?
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setScheduleMode((s) => ({ ...s, [quote.id]: "now" }))
+                    }
+                    className={`rounded-md border p-3 text-left transition-all ${
+                      mode === "now"
+                        ? "border-primary/50 bg-primary/10"
+                        : "border-border bg-surface hover:bg-surface-2"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Zap className="size-3.5 text-primary" />
+                      Call now
+                    </div>
+                    <div className="mono text-[10px] text-muted-foreground mt-1">
+                      Dial immediately on approval
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setScheduleMode((s) => ({ ...s, [quote.id]: "later" }))
+                    }
+                    className={`rounded-md border p-3 text-left transition-all ${
+                      mode === "later"
+                        ? "border-primary/50 bg-primary/10"
+                        : "border-border bg-surface hover:bg-surface-2"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <CalendarClock className="size-3.5 text-primary" />
+                      Schedule
+                    </div>
+                    <div className="mono text-[10px] text-muted-foreground mt-1">
+                      Pick a date & time
+                    </div>
+                  </button>
+                </div>
+                {mode === "later" && (
+                  <div>
+                    <label className="mono text-[10px] uppercase tracking-widest text-muted-foreground block mb-1.5">
+                      Date & time
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={scheduledFor}
+                      min={defaultSchedule()}
+                      onChange={(e) =>
+                        setSchedules((s) => ({ ...s, [quote.id]: e.target.value }))
+                      }
+                      className="mono text-sm"
+                    />
+                    <div className="mono text-[10px] text-muted-foreground mt-2">
+                      Agent will dial on {formatSchedule(scheduledFor)} ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
                 <Button onClick={() => approve(quote.id)} size="lg" className="gap-2">
-                  <PhoneCall className="size-4" />
-                  Approve & start call
+                  {mode === "later" ? (
+                    <>
+                      <CalendarClock className="size-4" />
+                      Approve & schedule
+                    </>
+                  ) : (
+                    <>
+                      <PhoneCall className="size-4" />
+                      Approve & start call
+                    </>
+                  )}
                 </Button>
                 <Button size="lg" variant="ghost">
                   Skip this business
