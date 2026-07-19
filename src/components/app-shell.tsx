@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VoiceSettingsControl } from "./voice-settings-control";
+import { ThemeToggle } from "./theme-toggle";
 
 const nav = [
   { to: "/", label: "Overview", icon: LayoutDashboard, badge: null as string | null },
@@ -148,6 +149,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </span>
                 <span className="mono text-[11px] text-foreground tabular-nums">$8,420</span>
               </div>
+              <ThemeToggle />
               <VoiceSettingsControl />
             </div>
           </div>
