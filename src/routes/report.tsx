@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Check,
-  Download,
   Trophy,
   AlertTriangle,
   Quote as QuoteIcon,
