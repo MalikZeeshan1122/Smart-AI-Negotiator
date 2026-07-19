@@ -63,6 +63,7 @@ function buildTwiml(opts: {
   voiceId: string;
   speed: string;
   nextUrl: string | null;
+  lang: string;
 }) {
   const q = new URLSearchParams({ text: opts.reply });
   if (opts.voiceId) q.set("voiceId", opts.voiceId);
@@ -82,7 +83,7 @@ function buildTwiml(opts: {
   // the instant the assistant finishes speaking — feels natural, not scripted.
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="${esc(opts.nextUrl)}" method="POST" speechTimeout="auto" timeout="8" language="en-US" speechModel="phone_call" enhanced="true" actionOnEmptyResult="true" bargeIn="true">
+  ${gatherOpenTag(opts.nextUrl, opts.lang)}
     <Play>${esc(playUrl)}</Play>
   </Gather>
 </Response>`;
