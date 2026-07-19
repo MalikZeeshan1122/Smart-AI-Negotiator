@@ -214,10 +214,83 @@ function LiveCalls() {
                   can end the call at any point.
                 </p>
               </div>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="w-full max-w-md rounded-lg border border-border bg-surface/40 p-4 text-left">
+                <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground mb-3">
+                  When should the agent call?
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setScheduleMode((s) => ({ ...s, [quote.id]: "now" }))
+                    }
+                    className={`rounded-md border p-3 text-left transition-all ${
+                      mode === "now"
+                        ? "border-primary/50 bg-primary/10"
+                        : "border-border bg-surface hover:bg-surface-2"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Zap className="size-3.5 text-primary" />
+                      Call now
+                    </div>
+                    <div className="mono text-[10px] text-muted-foreground mt-1">
+                      Dial immediately on approval
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setScheduleMode((s) => ({ ...s, [quote.id]: "later" }))
+                    }
+                    className={`rounded-md border p-3 text-left transition-all ${
+                      mode === "later"
+                        ? "border-primary/50 bg-primary/10"
+                        : "border-border bg-surface hover:bg-surface-2"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <CalendarClock className="size-3.5 text-primary" />
+                      Schedule
+                    </div>
+                    <div className="mono text-[10px] text-muted-foreground mt-1">
+                      Pick a date & time
+                    </div>
+                  </button>
+                </div>
+                {mode === "later" && (
+                  <div>
+                    <label className="mono text-[10px] uppercase tracking-widest text-muted-foreground block mb-1.5">
+                      Date & time
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={scheduledFor}
+                      min={defaultSchedule()}
+                      onChange={(e) =>
+                        setSchedules((s) => ({ ...s, [quote.id]: e.target.value }))
+                      }
+                      className="mono text-sm"
+                    />
+                    <div className="mono text-[10px] text-muted-foreground mt-2">
+                      Agent will dial on {formatSchedule(scheduledFor)} ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
                 <Button onClick={() => approve(quote.id)} size="lg" className="gap-2">
-                  <PhoneCall className="size-4" />
-                  Approve & start call
+                  {mode === "later" ? (
+                    <>
+                      <CalendarClock className="size-4" />
+                      Approve & schedule
+                    </>
+                  ) : (
+                    <>
+                      <PhoneCall className="size-4" />
+                      Approve & start call
+                    </>
+                  )}
                 </Button>
                 <Button size="lg" variant="ghost">
                   Skip this business
