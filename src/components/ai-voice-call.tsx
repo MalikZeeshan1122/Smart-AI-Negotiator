@@ -22,6 +22,7 @@ export function AiVoiceCall({
 }) {
   const place = useServerFn(placeAiVoiceCall);
   const status = useServerFn(getCallStatus);
+  const listRecordings = useServerFn(listCallRecordings);
 
   const [to, setTo] = useState(defaultTo);
   const [from, setFrom] = useState(DEFAULT_FROM);
@@ -37,6 +38,9 @@ export function AiVoiceCall({
     endTime?: string | null;
   } | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
+  const [recordings, setRecordings] = useState<
+    Array<{ sid: string; url: string; duration: string | null; dateCreated: string; status: string }>
+  >([]);
   const feedRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
