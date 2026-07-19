@@ -1,6 +1,7 @@
 // Client-side audit bundle generator. Produces a signed, downloadable JSON
 // artifact per run so users can verify what the agent said/did.
 import type { Job, Quote } from "./mock-data";
+import { ttsUrl } from "./tts-url";
 
 // FNV-1a 64-bit-ish hash — deterministic, no deps, good enough for a
 // user-visible fingerprint of the JobSpec.
