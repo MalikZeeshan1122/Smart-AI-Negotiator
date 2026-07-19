@@ -136,6 +136,7 @@ export function AiVoiceCall({
           speed: vs.speed,
           context: context.trim(),
           maxTurns: 8,
+          language,
         },
       });
       if (!r.ok) {
