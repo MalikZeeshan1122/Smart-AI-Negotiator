@@ -17,7 +17,7 @@ export const Route = createFileRoute("/quotes")({
 
 function Quotes() {
   const sorted = [...activeJob.quotes].sort((a, b) => a.finalPrice - b.finalPrice);
-  const best = sorted[0];
+  const best = sorted.find((q) => q.risk !== "high") ?? sorted[0];
   const totalSaved = activeJob.quotes.reduce((sum, q) => sum + q.savings, 0);
 
   return (
