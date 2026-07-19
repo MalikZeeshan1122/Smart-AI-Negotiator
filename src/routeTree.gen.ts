@@ -19,6 +19,7 @@ import { Route as ApiPublicVoiceTurnRouteImport } from './routes/api/public/voic
 import { Route as ApiPublicTwimlRouteImport } from './routes/api/public/twiml'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
 import { Route as ApiPublicRecordingRouteImport } from './routes/api/public/recording'
+import { Route as ApiPublicElevenlabsTokenRouteImport } from './routes/api/public/elevenlabs-token'
 
 const ReportRoute = ReportRouteImport.update({
   id: '/report',
@@ -70,6 +71,12 @@ const ApiPublicRecordingRoute = ApiPublicRecordingRouteImport.update({
   path: '/api/public/recording',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicElevenlabsTokenRoute =
+  ApiPublicElevenlabsTokenRouteImport.update({
+    id: '/api/public/elevenlabs-token',
+    path: '/api/public/elevenlabs-token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/new': typeof NewRoute
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
+  '/api/public/elevenlabs-token': typeof ApiPublicElevenlabsTokenRoute
   '/api/public/recording': typeof ApiPublicRecordingRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/api/public/twiml': typeof ApiPublicTwimlRoute
@@ -90,6 +98,7 @@ export interface FileRoutesByTo {
   '/new': typeof NewRoute
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
+  '/api/public/elevenlabs-token': typeof ApiPublicElevenlabsTokenRoute
   '/api/public/recording': typeof ApiPublicRecordingRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/api/public/twiml': typeof ApiPublicTwimlRoute
@@ -103,6 +112,7 @@ export interface FileRoutesById {
   '/new': typeof NewRoute
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
+  '/api/public/elevenlabs-token': typeof ApiPublicElevenlabsTokenRoute
   '/api/public/recording': typeof ApiPublicRecordingRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/api/public/twiml': typeof ApiPublicTwimlRoute
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/quotes'
     | '/report'
+    | '/api/public/elevenlabs-token'
     | '/api/public/recording'
     | '/api/public/tts'
     | '/api/public/twiml'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/quotes'
     | '/report'
+    | '/api/public/elevenlabs-token'
     | '/api/public/recording'
     | '/api/public/tts'
     | '/api/public/twiml'
@@ -141,6 +153,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/quotes'
     | '/report'
+    | '/api/public/elevenlabs-token'
     | '/api/public/recording'
     | '/api/public/tts'
     | '/api/public/twiml'
@@ -154,6 +167,7 @@ export interface RootRouteChildren {
   NewRoute: typeof NewRoute
   QuotesRoute: typeof QuotesRoute
   ReportRoute: typeof ReportRoute
+  ApiPublicElevenlabsTokenRoute: typeof ApiPublicElevenlabsTokenRoute
   ApiPublicRecordingRoute: typeof ApiPublicRecordingRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
   ApiPublicTwimlRoute: typeof ApiPublicTwimlRoute
@@ -232,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRecordingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/elevenlabs-token': {
+      id: '/api/public/elevenlabs-token'
+      path: '/api/public/elevenlabs-token'
+      fullPath: '/api/public/elevenlabs-token'
+      preLoaderRoute: typeof ApiPublicElevenlabsTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -242,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewRoute: NewRoute,
   QuotesRoute: QuotesRoute,
   ReportRoute: ReportRoute,
+  ApiPublicElevenlabsTokenRoute: ApiPublicElevenlabsTokenRoute,
   ApiPublicRecordingRoute: ApiPublicRecordingRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
   ApiPublicTwimlRoute: ApiPublicTwimlRoute,
