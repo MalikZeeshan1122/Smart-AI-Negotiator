@@ -137,9 +137,12 @@ export function AiVoiceCall({
         },
       });
       if (!r.ok) {
-        setError(r.error || "Failed to place call");
+        const msg = r.error || "Failed to place call";
+        setError(msg);
+        if (isUnverifiedNumberError(msg)) setVerifyOpen(true);
       } else {
         setCall({ sid: r.sid, status: r.status });
+        setVerifyOpen(false);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to place call");
