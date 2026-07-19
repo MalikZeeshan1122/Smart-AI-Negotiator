@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { TranscriptAudio } from "@/components/transcript-audio";
 import { TwilioSmsStatus } from "@/components/twilio-sms-status";
 import { AiVoiceCall } from "@/components/ai-voice-call";
+import { LiveVoiceChat } from "@/components/live-voice-chat";
 
 export const Route = createFileRoute("/calls")({
   head: () => ({
