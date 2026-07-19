@@ -44,6 +44,20 @@ function Report() {
     (t) => t.role === "business" && t.text.toLowerCase().includes("1,980"),
   );
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [ackTranscript, setAckTranscript] = useState(false);
+  const [ackTerms, setAckTerms] = useState(false);
+  const [ackAuthorize, setAckAuthorize] = useState(false);
+  const [booked, setBooked] = useState(false);
+  const canConfirm = ackTranscript && ackTerms && ackAuthorize;
+
+  const confirmBooking = () => {
+    if (!canConfirm) return;
+    setBooked(true);
+    setDialogOpen(false);
+  };
+
+
   return (
     <AppShell>
       <div className="mb-8 flex items-end justify-between">
