@@ -5,6 +5,15 @@ const VOICES: Record<string, string> = {
   business: "CwhRBWXzGAHq8TQ4Fs17", // Roger
 };
 
+// Only forward known ElevenLabs voice IDs (24 alnum chars) to avoid abuse.
+const VOICE_ID_RE = /^[A-Za-z0-9]{16,32}$/;
+
+function clampSpeed(raw: string | null): number {
+  const n = raw == null ? NaN : Number(raw);
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(1.2, Math.max(0.7, Math.round(n * 100) / 100));
+}
+
 export const Route = createFileRoute("/api/public/tts")({
   server: {
     handlers: {
@@ -18,14 +27,19 @@ export const Route = createFileRoute("/api/public/tts")({
         }
         const url = new URL(request.url);
         const text = url.searchParams.get("text")?.slice(0, 1000);
-        const voiceKey = url.searchParams.get("voice") ?? "agent";
+        const role = url.searchParams.get("role") ?? url.searchParams.get("voice") ?? "agent";
+        const voiceIdParam = url.searchParams.get("voiceId");
+        const speed = clampSpeed(url.searchParams.get("speed"));
         if (!text) {
           return new Response(JSON.stringify({ error: "Missing text" }), {
             status: 400,
             headers: { "content-type": "application/json" },
           });
         }
-        const voiceId = VOICES[voiceKey] ?? VOICES.agent;
+        const voiceId =
+          voiceIdParam && VOICE_ID_RE.test(voiceIdParam)
+            ? voiceIdParam
+            : (VOICES[role] ?? VOICES.agent);
 
         const upstream = await fetch(
           `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
@@ -43,10 +57,12 @@ export const Route = createFileRoute("/api/public/tts")({
                 similarity_boost: 0.75,
                 style: 0.3,
                 use_speaker_boost: true,
+                speed,
               },
             }),
           },
         );
+
 
         if (!upstream.ok) {
           const errText = await upstream.text();

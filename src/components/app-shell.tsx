@@ -12,6 +12,7 @@ import {
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VoiceSettingsControl } from "./voice-settings-control";
 
 const nav = [
   { to: "/", label: "Overview", icon: LayoutDashboard, badge: null as string | null },
@@ -147,6 +148,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </span>
                 <span className="mono text-[11px] text-foreground tabular-nums">$8,420</span>
               </div>
+              <VoiceSettingsControl />
             </div>
           </div>
         </div>
