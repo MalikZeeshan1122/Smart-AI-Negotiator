@@ -17,15 +17,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Check,
-  Download,
   Trophy,
   AlertTriangle,
   Quote as QuoteIcon,
   ShieldCheck,
   Lock,
   CheckCircle2,
+  FileArchive,
+  Fingerprint,
+  Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { buildAuditBundle, downloadAuditBundle } from "@/lib/audit-bundle";
 
 export const Route = createFileRoute("/report")({
   head: () => ({
@@ -49,12 +52,27 @@ function Report() {
   const [ackTerms, setAckTerms] = useState(false);
   const [ackAuthorize, setAckAuthorize] = useState(false);
   const [booked, setBooked] = useState(false);
+  const [specHash, setSpecHash] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const canConfirm = ackTranscript && ackTerms && ackAuthorize;
+
+  useEffect(() => {
+    buildAuditBundle(activeJob).then((b) => setSpecHash(b.job.specHash));
+  }, []);
 
   const confirmBooking = () => {
     if (!canConfirm) return;
     setBooked(true);
     setDialogOpen(false);
+  };
+
+  const onDownloadBundle = async () => {
+    setDownloading(true);
+    try {
+      await downloadAuditBundle(activeJob);
+    } finally {
+      setDownloading(false);
+    }
   };
 
 
@@ -70,10 +88,34 @@ function Report() {
             {activeJob.origin} → {activeJob.destination} · {activeJob.date} · 2-bedroom
           </p>
         </div>
-        <Button variant="secondary" className="gap-2">
-          <Download className="size-4" />
-          Download PDF
-        </Button>
+        <div className="flex items-center gap-3">
+          {specHash && (
+            <div className="hidden md:flex items-center gap-2 rounded-md border border-border bg-surface/60 px-3 py-2">
+              <Fingerprint className="size-3.5 text-primary" />
+              <div className="leading-tight">
+                <div className="mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                  JobSpec hash
+                </div>
+                <div className="mono text-[11px] tabular-nums">
+                  {specHash.slice(0, 12)}…
+                </div>
+              </div>
+            </div>
+          )}
+          <Button
+            variant="secondary"
+            className="gap-2"
+            onClick={onDownloadBundle}
+            disabled={downloading}
+          >
+            {downloading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <FileArchive className="size-4" />
+            )}
+            Download audit bundle
+          </Button>
+        </div>
       </div>
 
       <div className="panel p-8 mb-6 relative overflow-hidden">
