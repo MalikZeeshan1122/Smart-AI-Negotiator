@@ -42,7 +42,8 @@ export const Route = createFileRoute("/report")({
 });
 
 function Report() {
-  const best = [...activeJob.quotes].sort((a, b) => a.finalPrice - b.finalPrice)[0];
+  const sorted = [...activeJob.quotes].sort((a, b) => a.finalPrice - b.finalPrice);
+  const best = sorted.find((q) => q.risk !== "high") ?? sorted[0];
   const totalSaved = activeJob.quotes.reduce((s, q) => s + q.savings, 0);
   const winningTurn = best.transcript.find(
     (t) => t.role === "business" && t.text.toLowerCase().includes("1,980"),
