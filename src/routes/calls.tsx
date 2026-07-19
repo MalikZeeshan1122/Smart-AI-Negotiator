@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PhoneCall, Bot, Building2, ShieldCheck, Lock, CheckCircle2, CalendarClock, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useEffect, useMemo, useState } from "react";
+import { TranscriptAudio } from "@/components/transcript-audio";
 
 export const Route = createFileRoute("/calls")({
   head: () => ({
@@ -337,6 +338,7 @@ function LiveCalls() {
                       >
                         {t.text}
                       </div>
+                      <TranscriptAudio text={t.text} role={t.role} label={`${t.role} at ${t.ts}`} />
                     </div>
                   </div>
                 ))}

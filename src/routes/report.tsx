@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { buildAuditBundle, downloadAuditBundle } from "@/lib/audit-bundle";
+import { TranscriptAudio } from "@/components/transcript-audio";
 
 export const Route = createFileRoute("/report")({
   head: () => ({
@@ -292,6 +293,7 @@ function Report() {
                 <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground mt-2">
                   — {best.company} · {winningTurn.ts}
                 </div>
+                <TranscriptAudio text={winningTurn.text} role={winningTurn.role} label="evidence quote" />
               </div>
             </div>
           )}

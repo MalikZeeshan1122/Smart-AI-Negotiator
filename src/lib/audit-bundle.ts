@@ -1,6 +1,7 @@
 // Client-side audit bundle generator. Produces a signed, downloadable JSON
 // artifact per run so users can verify what the agent said/did.
 import type { Job, Quote } from "./mock-data";
+import { ttsUrl } from "./tts-url";
 
 // FNV-1a 64-bit-ish hash — deterministic, no deps, good enough for a
 // user-visible fingerprint of the JobSpec.
@@ -47,7 +48,7 @@ export type AuditBundle = {
     company: string;
     phone: string;
     callDurationSec: number;
-    turns: Quote["transcript"];
+    turns: Array<Quote["transcript"][number] & { audioUrl: string }>;
   }>;
   recordings: Array<{
     quoteId: string;
@@ -80,7 +81,7 @@ export async function buildAuditBundle(job: Job): Promise<AuditBundle> {
       company: q.company,
       phone: q.phone,
       callDurationSec: q.callDurationSec,
-      turns: q.transcript,
+      turns: q.transcript.map((t) => ({ ...t, audioUrl: ttsUrl(t.text, t.role) })),
     })),
     recordings: quotes.map((q) => ({
       quoteId: q.id,
