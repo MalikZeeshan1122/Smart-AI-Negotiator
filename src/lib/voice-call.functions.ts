@@ -85,6 +85,9 @@ export const placeAiVoiceCall = createServerFn({ method: "POST" })
       From: data.from,
       Url: twimlUrl,
       Method: "GET",
+      Record: "true",
+      RecordingChannels: "dual",
+      RecordingTrack: "both",
     });
 
     const res = await fetch(`${GATEWAY}/Calls.json`, {
@@ -163,3 +166,49 @@ export const getCallStatus = createServerFn({ method: "GET" })
       priceUnit: c.price_unit,
     };
   });
+
+export const listCallRecordings = createServerFn({ method: "GET" })
+  .inputValidator((data: { sid: string }) => {
+    if (!/^CA[a-f0-9]{32}$/i.test(data.sid)) throw new Error("Invalid call SID");
+    return data;
+  })
+  .handler(async ({ data }) => {
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    const twilioKey = process.env.TWILIO_API_KEY;
+    if (!lovableKey || !twilioKey) {
+      return { ok: false as const, error: "Twilio not configured" };
+    }
+    const res = await fetch(
+      `${GATEWAY}/Calls/${encodeURIComponent(data.sid)}/Recordings.json`,
+      {
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": twilioKey,
+        },
+      },
+    );
+    const text = await res.text();
+    if (!res.ok) return { ok: false as const, status: res.status, error: text };
+    const j = JSON.parse(text) as {
+      recordings: Array<{
+        sid: string;
+        duration: string | null;
+        channels: number;
+        date_created: string;
+        status: string;
+      }>;
+    };
+    return {
+      ok: true as const,
+      recordings: j.recordings.map((r) => ({
+        sid: r.sid,
+        duration: r.duration,
+        channels: r.channels,
+        dateCreated: r.date_created,
+        status: r.status,
+        // Streams via our proxy so the browser doesn't need Twilio Basic Auth.
+        url: `/api/public/recording?sid=${encodeURIComponent(r.sid)}`,
+      })),
+    };
+  });
+

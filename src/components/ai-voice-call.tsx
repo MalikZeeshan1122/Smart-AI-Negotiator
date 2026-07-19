@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { placeAiVoiceCall, getCallStatus } from "@/lib/voice-call.functions";
+import { placeAiVoiceCall, getCallStatus, listCallRecordings } from "@/lib/voice-call.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio, Bot, User } from "lucide-react";
@@ -22,6 +22,7 @@ export function AiVoiceCall({
 }) {
   const place = useServerFn(placeAiVoiceCall);
   const status = useServerFn(getCallStatus);
+  const listRecordings = useServerFn(listCallRecordings);
 
   const [to, setTo] = useState(defaultTo);
   const [from, setFrom] = useState(DEFAULT_FROM);
@@ -37,6 +38,9 @@ export function AiVoiceCall({
     endTime?: string | null;
   } | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
+  const [recordings, setRecordings] = useState<
+    Array<{ sid: string; url: string; duration: string | null; dateCreated: string; status: string }>
+  >([]);
   const feedRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -82,6 +86,31 @@ export function AiVoiceCall({
       clearInterval(id);
     };
   }, [call]);
+
+  // Once call ends (or periodically while active), fetch recordings.
+  useEffect(() => {
+    if (!call) return;
+    let cancelled = false;
+    const fetchRec = async () => {
+      try {
+        const r = await listRecordings({ data: { sid: call.sid } });
+        if (!cancelled && r.ok) setRecordings(r.recordings);
+      } catch {
+        /* ignore */
+      }
+    };
+    fetchRec();
+    // Twilio finalizes recordings a few seconds after hangup — poll a bit longer.
+    const id = setInterval(fetchRec, 5000);
+    const stop = TERMINAL.has(call.status)
+      ? setTimeout(() => clearInterval(id), 30_000)
+      : null;
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      if (stop) clearTimeout(stop);
+    };
+  }, [call, listRecordings]);
 
   useEffect(() => {
     feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: "smooth" });
@@ -211,6 +240,39 @@ export function AiVoiceCall({
           )}
         </div>
       )}
+
+      {recordings.length > 0 && (
+        <div>
+          <div className="mb-2 text-xs font-semibold text-muted-foreground">
+            Call recording{recordings.length > 1 ? "s" : ""}
+          </div>
+          <div className="space-y-2">
+            {recordings.map((r) => (
+              <div key={r.sid} className="rounded-md border bg-background/50 p-3 space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="font-mono">{r.sid}</span>
+                  <span>
+                    {r.duration ? `${r.duration}s` : r.status}
+                    {" · "}
+                    {new Date(r.dateCreated).toLocaleTimeString()}
+                  </span>
+                </div>
+                <audio controls preload="metadata" src={r.url} className="w-full h-9" />
+                <div className="flex justify-end">
+                  <a
+                    href={r.url}
+                    download={`${r.sid}.mp3`}
+                    className="text-[11px] text-primary hover:underline"
+                  >
+                    Download MP3
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {turns.length > 0 && (
         <div>
