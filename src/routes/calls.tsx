@@ -7,6 +7,7 @@ import { PhoneCall, Bot, Building2, ShieldCheck, Lock, CheckCircle2, CalendarClo
 import { Input } from "@/components/ui/input";
 import { useEffect, useMemo, useState } from "react";
 import { TranscriptAudio } from "@/components/transcript-audio";
+import { TwilioSmsStatus } from "@/components/twilio-sms-status";
 
 export const Route = createFileRoute("/calls")({
   head: () => ({
