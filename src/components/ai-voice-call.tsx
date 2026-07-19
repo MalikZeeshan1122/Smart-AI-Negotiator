@@ -197,6 +197,26 @@ export function AiVoiceCall({
         </div>
       </div>
       <div>
+        <label className="text-xs font-medium text-muted-foreground">
+          Rep's spoken language (what Twilio listens for)
+        </label>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          {SPEECH_LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.label} ({l.code})
+            </option>
+          ))}
+        </select>
+        <div className="mt-1 text-[10px] text-muted-foreground">
+          Pick the language the person on the other end will speak — if they speak Urdu but this is
+          set to English, Twilio won't understand them and the AI will loop.
+        </div>
+      </div>
+      <div>
         <label className="text-xs font-medium text-muted-foreground">Opening line (ElevenLabs speaks first)</label>
         <textarea
           value={script}
