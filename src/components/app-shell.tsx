@@ -149,6 +149,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </span>
                 <span className="mono text-[11px] text-foreground tabular-nums">$8,420</span>
               </div>
+              <ThemeToggle />
               <VoiceSettingsControl />
             </div>
           </div>
