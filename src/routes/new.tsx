@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { FileText, Image as ImageIcon, X } from "lucide-react";
 import {
   Truck,
   Stethoscope,
@@ -35,9 +36,50 @@ const services = [
   { id: "contractor", label: "Contractors", icon: Building2, tag: "Soon" },
 ];
 
+const MAX_BYTES = 20 * 1024 * 1024;
+const ACCEPT = ".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg";
+
+type UploadedFile = { id: string; name: string; size: number; type: string };
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function NewNegotiation() {
   const [step, setStep] = useState(1);
   const [service, setService] = useState("moving");
+  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = (incoming: FileList | File[]) => {
+    setUploadError(null);
+    const accepted: UploadedFile[] = [];
+    for (const f of Array.from(incoming)) {
+      if (f.size > MAX_BYTES) {
+        setUploadError(`${f.name} exceeds 20MB limit`);
+        continue;
+      }
+      const ok = /pdf|png|jpe?g/i.test(f.type) || /\.(pdf|png|jpe?g)$/i.test(f.name);
+      if (!ok) {
+        setUploadError(`${f.name} is not a supported file type`);
+        continue;
+      }
+      accepted.push({
+        id: `${f.name}-${f.size}-${crypto.randomUUID()}`,
+        name: f.name,
+        size: f.size,
+        type: f.type,
+      });
+    }
+    if (accepted.length) setFiles((prev) => [...prev, ...accepted]);
+  };
+
+  const removeFile = (id: string) =>
+    setFiles((prev) => prev.filter((f) => f.id !== id));
 
   return (
     <AppShell>
@@ -188,18 +230,102 @@ function NewNegotiation() {
             <p className="text-sm text-muted-foreground mb-6">
               PDFs, photos, existing quotes. We OCR and merge into the job spec.
             </p>
-            <div className="rounded-lg border-2 border-dashed border-border bg-surface/40 p-10 grid place-items-center text-center">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPT}
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                if (e.dataTransfer.files) addFiles(e.dataTransfer.files);
+              }}
+              className={cn(
+                "rounded-lg border-2 border-dashed p-10 grid place-items-center text-center cursor-pointer transition-colors outline-none",
+                dragOver
+                  ? "border-primary/60 bg-primary/10"
+                  : "border-border bg-surface/40 hover:bg-surface/60 focus-visible:border-primary/50",
+              )}
+            >
               <Upload className="size-8 text-muted-foreground mb-3" />
               <div className="text-sm font-medium">Drop files or click to upload</div>
               <div className="text-xs text-muted-foreground mt-1">
                 PDF, PNG, JPG · Max 20MB each
               </div>
-              <Button variant="secondary" size="sm" className="mt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="mt-4"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+              >
                 Choose files
               </Button>
             </div>
+
+            {uploadError && (
+              <div className="mt-3 text-xs text-danger">{uploadError}</div>
+            )}
+
+            {files.length > 0 && (
+              <ul className="mt-4 space-y-2">
+                {files.map((f) => {
+                  const isPdf = /pdf/i.test(f.type) || /\.pdf$/i.test(f.name);
+                  const Icon = isPdf ? FileText : ImageIcon;
+                  return (
+                    <li
+                      key={f.id}
+                      className="flex items-center gap-3 rounded-md border border-border bg-surface/40 px-3 py-2"
+                    >
+                      <Icon className="size-4 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm truncate">{f.name}</div>
+                        <div className="mono text-[10px] text-muted-foreground">
+                          {formatSize(f.size)} · queued for OCR
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(f.id)}
+                        className="text-muted-foreground hover:text-foreground p-1"
+                        aria-label={`Remove ${f.name}`}
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
             <div className="mt-4 text-xs text-muted-foreground">
-              Optional — skip to dispatch if you don't have any quotes yet.
+              {files.length > 0
+                ? `${files.length} file${files.length === 1 ? "" : "s"} attached. Continue to dispatch.`
+                : "Optional — skip to dispatch if you don't have any quotes yet."}
             </div>
           </div>
         )}
