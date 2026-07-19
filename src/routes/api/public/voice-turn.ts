@@ -64,15 +64,29 @@ function buildTwiml(opts: {
   speed: string;
   nextUrl: string | null;
 }) {
-  const parts = chunk(opts.reply);
-  const plays = parts
-    .map((p) => {
-      const q = new URLSearchParams({ text: p });
-      if (opts.voiceId) q.set("voiceId", opts.voiceId);
-      if (opts.speed) q.set("speed", opts.speed);
-      return `<Play>${esc(`${opts.origin}/api/public/tts?${q.toString()}`)}</Play>`;
-    })
-    .join("\n  ");
+  const q = new URLSearchParams({ text: opts.reply });
+  if (opts.voiceId) q.set("voiceId", opts.voiceId);
+  if (opts.speed) q.set("speed", opts.speed);
+  const playUrl = `${opts.origin}/api/public/tts?${q.toString()}`;
+
+  if (!opts.nextUrl) {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Play>${esc(playUrl)}</Play>
+  <Pause length="1"/>
+  <Hangup/>
+</Response>`;
+  }
+
+  // Nested <Play> inside <Gather> lets the rep barge in and starts listening
+  // the instant the assistant finishes speaking — feels natural, not scripted.
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="${esc(opts.nextUrl)}" method="POST" speechTimeout="auto" timeout="8" language="en-US" speechModel="phone_call" enhanced="true" actionOnEmptyResult="true" bargeIn="true">
+    <Play>${esc(playUrl)}</Play>
+  </Gather>
+</Response>`;
+}
 
   const tail = opts.nextUrl
     ? `<Gather input="speech" action="${esc(opts.nextUrl)}" method="POST" speechTimeout="auto" language="en-US" actionOnEmptyResult="true"/>`
