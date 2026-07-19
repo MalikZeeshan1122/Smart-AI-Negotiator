@@ -120,14 +120,107 @@ function Report() {
               </div>
             </div>
 
-            <div className="mt-6 flex gap-3">
-              <Button size="lg">Accept & book with {best.company}</Button>
+            <div className="mt-6 flex gap-3 items-center flex-wrap">
+              {booked ? (
+                <div className="flex items-center gap-2 rounded-md bg-success/15 border border-success/30 px-4 py-2.5 text-sm text-success">
+                  <CheckCircle2 className="size-4" />
+                  <span className="font-medium">Booking confirmed with {best.company}</span>
+                  <span className="mono text-[10px] uppercase tracking-widest text-success/80 ml-2">
+                    You authorized · {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              ) : (
+                <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button size="lg" className="gap-2">
+                      <Lock className="size-4" />
+                      Review & approve booking
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="max-w-lg">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <ShieldCheck className="size-5 text-primary" />
+                        Approve booking with {best.company}?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription asChild>
+                        <div className="space-y-3 pt-2 text-sm">
+                          <div className="rounded-md bg-surface/60 border border-border p-3 space-y-1">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Company</span>
+                              <span className="text-foreground font-medium">{best.company}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Locked price</span>
+                              <span className="text-foreground font-semibold mono tabular-nums">
+                                ${best.finalPrice.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Availability</span>
+                              <span className="text-foreground">{best.availability}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Cancellation</span>
+                              <span className="text-foreground">{best.cancellation}</span>
+                            </div>
+                          </div>
+                          <p className="text-muted-foreground">
+                            Negotiator AI will only finalize this deal after you check every box below.
+                          </p>
+                        </div>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <div className="space-y-2.5 py-2">
+                      {[
+                        { id: "t", label: "I reviewed the call transcript and negotiation history.", val: ackTranscript, set: setAckTranscript },
+                        { id: "c", label: "I understand the cancellation and insurance terms.", val: ackTerms, set: setAckTerms },
+                        { id: "a", label: `I authorize Negotiator AI to finalize this booking at $${best.finalPrice.toLocaleString()}.`, val: ackAuthorize, set: setAckAuthorize },
+                      ].map((c) => (
+                        <label
+                          key={c.id}
+                          htmlFor={`ack-${c.id}`}
+                          className="flex items-start gap-3 rounded-md border border-border p-3 cursor-pointer hover:bg-surface/60 transition-colors"
+                        >
+                          <Checkbox
+                            id={`ack-${c.id}`}
+                            checked={c.val}
+                            onCheckedChange={(v) => c.set(!!v)}
+                            className="mt-0.5"
+                          />
+                          <span className="text-sm">{c.label}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Not yet</AlertDialogCancel>
+                      <AlertDialogAction
+                        disabled={!canConfirm}
+                        onClick={confirmBooking}
+                        className="gap-2"
+                      >
+                        <CheckCircle2 className="size-4" />
+                        Confirm & book
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               <Link to="/quotes">
                 <Button size="lg" variant="secondary">
                   Compare again
                 </Button>
               </Link>
+              {!booked && (
+                <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground w-full mt-1">
+                  <Lock className="inline size-3 mr-1" />
+                  Approval gate · nothing is booked until you confirm
+                </div>
+              )}
             </div>
+
           </div>
         </div>
       </div>
