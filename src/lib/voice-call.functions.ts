@@ -6,6 +6,24 @@ const GATEWAY = "https://connector-gateway.lovable.dev/twilio";
 const E164 = /^\+[1-9]\d{6,14}$/;
 const VOICE_ID_RE = /^[A-Za-z0-9]{16,32}$/;
 
+// Extract project uuid from any Lovable preview/prod host and return the
+// stable public URL Twilio can fetch without auth-bridge redirects.
+function toPublicOrigin(origin: string): string {
+  try {
+    const u = new URL(origin);
+    const host = u.hostname;
+    const uuidRe = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    const m = host.match(uuidRe);
+    if (m) {
+      return `https://project--${m[0]}-dev.lovable.app`;
+    }
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return origin.replace(/\/$/, "");
+  }
+}
+
+
 export const placeAiVoiceCall = createServerFn({ method: "POST" })
   .inputValidator(
     (data: {
@@ -51,10 +69,15 @@ export const placeAiVoiceCall = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Twilio not configured" };
     }
 
+    // Force a publicly reachable host — *.lovableproject.com and
+    // id-preview--*.lovable.app are auth-gated so Twilio's fetcher gets a 302
+    // and falls back to a generic voice. Map to the stable public preview URL.
+    const publicOrigin = toPublicOrigin(data.origin);
+
     const twimlParams = new URLSearchParams({ script: data.script });
     if (data.voiceId) twimlParams.set("voiceId", data.voiceId);
     if (data.speed) twimlParams.set("speed", String(data.speed));
-    const twimlUrl = `${data.origin.replace(/\/$/, "")}/api/public/twiml?${twimlParams.toString()}`;
+    const twimlUrl = `${publicOrigin}/api/public/twiml?${twimlParams.toString()}`;
 
     const body = new URLSearchParams({
       To: data.to,
