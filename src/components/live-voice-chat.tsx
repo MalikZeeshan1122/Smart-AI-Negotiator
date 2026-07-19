@@ -1,4 +1,4 @@
-import { useConversation } from "@elevenlabs/react";
+import { useConversation, ConversationProvider } from "@elevenlabs/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,14 @@ type Turn = { role: "user" | "agent"; text: string; ts: number };
 const AGENT_ID_STORAGE_KEY = "negotiator.elevenlabsAgentId";
 
 export function LiveVoiceChat() {
+  return (
+    <ConversationProvider>
+      <LiveVoiceChatInner />
+    </ConversationProvider>
+  );
+}
+
+function LiveVoiceChatInner() {
   const [agentId, setAgentId] = useState("");
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
