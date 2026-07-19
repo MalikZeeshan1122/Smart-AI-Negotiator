@@ -48,9 +48,10 @@ export function LiveVoiceChat() {
       const msg = e instanceof Error ? e.message : typeof e === "string" ? e : "Voice agent error";
       setError(msg);
     },
-    onMessage: (message: { source?: string; message?: string } & Record<string, unknown>) => {
-      const src = message.source;
-      const text = typeof message.message === "string" ? message.message : "";
+    onMessage: (message) => {
+      const m = message as { source?: string; message?: string };
+      const src = m.source;
+      const text = typeof m.message === "string" ? m.message : "";
       if (!text) return;
       if (src === "user") pushTurn({ role: "user", text, ts: Date.now() });
       else if (src === "ai" || src === "agent") pushTurn({ role: "agent", text, ts: Date.now() });
