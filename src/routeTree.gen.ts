@@ -12,14 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReportRouteImport } from './routes/report'
 import { Route as QuotesRouteImport } from './routes/quotes'
 import { Route as NewRouteImport } from './routes/new'
-import { Route as McpRouteImport } from './routes/mcp'
 import { Route as DryRunRouteImport } from './routes/dry-run'
 import { Route as CallsRouteImport } from './routes/calls'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
-import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 
 const ReportRoute = ReportRouteImport.update({
   id: '/report',
@@ -34,11 +30,6 @@ const QuotesRoute = QuotesRouteImport.update({
 const NewRoute = NewRouteImport.update({
   id: '/new',
   path: '/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DryRunRoute = DryRunRouteImport.update({
@@ -56,54 +47,28 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   id: '/api/public/tts',
   path: '/api/public/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotmcpChar93InvokeToolToolRoute =
-  Char91DotmcpChar93InvokeToolToolRouteImport.update({
-    id: '/.mcp/invoke-tool/$tool',
-    path: '/.mcp/invoke-tool/$tool',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calls': typeof CallsRoute
   '/dry-run': typeof DryRunRoute
-  '/mcp': typeof McpRoute
   '/new': typeof NewRoute
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
-  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calls': typeof CallsRoute
   '/dry-run': typeof DryRunRoute
-  '/mcp': typeof McpRoute
   '/new': typeof NewRoute
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
-  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
 }
 export interface FileRoutesById {
@@ -111,13 +76,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/calls': typeof CallsRoute
   '/dry-run': typeof DryRunRoute
-  '/mcp': typeof McpRoute
   '/new': typeof NewRoute
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
-  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
 }
 export interface FileRouteTypes {
@@ -126,39 +87,27 @@ export interface FileRouteTypes {
     | '/'
     | '/calls'
     | '/dry-run'
-    | '/mcp'
     | '/new'
     | '/quotes'
     | '/report'
-    | '/.mcp/list-tools'
-    | '/.well-known/oauth-protected-resource'
-    | '/.mcp/invoke-tool/$tool'
     | '/api/public/tts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/calls'
     | '/dry-run'
-    | '/mcp'
     | '/new'
     | '/quotes'
     | '/report'
-    | '/.mcp/list-tools'
-    | '/.well-known/oauth-protected-resource'
-    | '/.mcp/invoke-tool/$tool'
     | '/api/public/tts'
   id:
     | '__root__'
     | '/'
     | '/calls'
     | '/dry-run'
-    | '/mcp'
     | '/new'
     | '/quotes'
     | '/report'
-    | '/.mcp/list-tools'
-    | '/.well-known/oauth-protected-resource'
-    | '/.mcp/invoke-tool/$tool'
     | '/api/public/tts'
   fileRoutesById: FileRoutesById
 }
@@ -166,13 +115,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CallsRoute: typeof CallsRoute
   DryRunRoute: typeof DryRunRoute
-  McpRoute: typeof McpRoute
   NewRoute: typeof NewRoute
   QuotesRoute: typeof QuotesRoute
   ReportRoute: typeof ReportRoute
-  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
-  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
 }
 
@@ -199,13 +144,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dry-run': {
       id: '/dry-run'
       path: '/dry-run'
@@ -227,32 +165,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.mcp/list-tools': {
-      id: '/.mcp/list-tools'
-      path: '/.mcp/list-tools'
-      fullPath: '/.mcp/list-tools'
-      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/tts': {
       id: '/api/public/tts'
       path: '/api/public/tts'
       fullPath: '/api/public/tts'
       preLoaderRoute: typeof ApiPublicTtsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -262,14 +179,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CallsRoute: CallsRoute,
   DryRunRoute: DryRunRoute,
-  McpRoute: McpRoute,
   NewRoute: NewRoute,
   QuotesRoute: QuotesRoute,
   ReportRoute: ReportRoute,
-  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
-  Char91DotwellKnownChar93OauthProtectedResourceRoute:
-    Char91DotwellKnownChar93OauthProtectedResourceRoute,
-  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
 }
 export const routeTree = rootRouteImport
