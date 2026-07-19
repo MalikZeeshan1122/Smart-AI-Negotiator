@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { buildAuditBundle, downloadAuditBundle } from "@/lib/audit-bundle";
+import { TranscriptAudio } from "@/components/transcript-audio";
 
 export const Route = createFileRoute("/report")({
   head: () => ({
