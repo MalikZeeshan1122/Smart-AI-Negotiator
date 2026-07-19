@@ -14,27 +14,40 @@ export function StatCard({
   accent?: "primary" | "chart-2" | "warning" | "chart-4";
 }) {
   return (
-    <div className="panel p-5 relative overflow-hidden group">
+    <div className="panel p-5 relative overflow-hidden group hover-glow hover:border-primary/25">
       <div
         className={cn(
-          "absolute -top-16 -right-16 size-40 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity",
-          accent === "primary" && "bg-primary/30",
-          accent === "chart-2" && "bg-chart-2/30",
-          accent === "warning" && "bg-warning/30",
-          accent === "chart-4" && "bg-chart-4/30",
+          "absolute -top-20 -right-20 size-48 rounded-full blur-3xl opacity-30 group-hover:opacity-60 transition-opacity",
+          accent === "primary" && "bg-primary/40",
+          accent === "chart-2" && "bg-chart-2/40",
+          accent === "warning" && "bg-warning/40",
+          accent === "chart-4" && "bg-chart-4/40",
         )}
       />
       <div className="relative flex items-start justify-between">
-        <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           {label}
         </div>
-        <div className="text-muted-foreground">{icon}</div>
+        <div
+          className={cn(
+            "size-7 rounded-lg grid place-items-center border",
+            accent === "primary" && "bg-primary/10 border-primary/25 text-primary",
+            accent === "chart-2" && "bg-chart-2/10 border-chart-2/25 text-chart-2",
+            accent === "warning" && "bg-warning/10 border-warning/25 text-warning",
+            accent === "chart-4" && "bg-chart-4/10 border-chart-4/25 text-chart-4",
+          )}
+        >
+          {icon}
+        </div>
       </div>
-      <div className="relative mt-3 text-3xl font-semibold tracking-tight tabular-nums">
+      <div className="relative mt-4 text-[32px] leading-none font-semibold tracking-tight tabular-nums">
         {value}
       </div>
       {delta && (
-        <div className="relative mt-1 text-xs mono text-success">{delta}</div>
+        <div className="relative mt-2 text-[11px] mono text-success flex items-center gap-1">
+          <span className="size-1 rounded-full bg-success" />
+          {delta}
+        </div>
       )}
     </div>
   );

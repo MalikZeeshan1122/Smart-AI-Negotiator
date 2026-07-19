@@ -196,6 +196,7 @@ export const dashboardStats = {
   moneySaved: 710,
   callsCompleted: 3,
   averageDiscountPct: 18,
+  trustScore: 92,
 };
 
 export const recentJobs = [
