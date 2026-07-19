@@ -138,9 +138,10 @@ export const Route = createFileRoute("/api/public/voice-turn")({
         if (voiceId) nextParams.set("voiceId", voiceId);
         if (speed) nextParams.set("speed", speed);
         nextParams.set("maxTurns", String(maxTurns));
+        nextParams.set("lang", lang);
         const nextUrl = end ? null : `${origin}/api/public/voice-turn?${nextParams.toString()}`;
 
-        const xml = buildTwiml({ origin, reply, voiceId, speed, nextUrl });
+        const xml = buildTwiml({ origin, reply, voiceId, speed, nextUrl, lang });
         if (end) {
           // keep transcript accessible for a bit before clearing
           setTimeout(() => clearState(callSid), 5 * 60_000);
