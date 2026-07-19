@@ -17,11 +17,38 @@ export const Route = createFileRoute("/calls")({
   component: LiveCalls,
 });
 
+function defaultSchedule() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() + 15 - (d.getMinutes() % 15));
+  d.setSeconds(0, 0);
+  // Format for datetime-local input in local time
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatSchedule(v: string) {
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return v;
+  return d.toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function LiveCalls() {
   const [selected, setSelected] = useState(activeJob.quotes[0].id);
   const [approved, setApproved] = useState<Record<string, boolean>>({});
+  const [schedules, setSchedules] = useState<Record<string, string>>(() =>
+    Object.fromEntries(activeJob.quotes.map((q) => [q.id, defaultSchedule()])),
+  );
+  const [scheduleMode, setScheduleMode] = useState<Record<string, "now" | "later">>({});
   const quote = activeJob.quotes.find((q) => q.id === selected)!;
   const isApproved = !!approved[quote.id];
+  const mode = scheduleMode[quote.id] ?? "now";
+  const scheduledFor = schedules[quote.id];
   const [visibleTurns, setVisibleTurns] = useState(0);
 
   const pendingCount = useMemo(
