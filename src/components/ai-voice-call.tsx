@@ -1,20 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { placeAiVoiceCall, getCallStatus } from "@/lib/voice-call.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio } from "lucide-react";
+import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio, Bot, User } from "lucide-react";
 import { readVoiceSettings } from "@/lib/voice-settings";
 
 const TERMINAL = new Set(["completed", "failed", "busy", "no-answer", "canceled"]);
 const DEFAULT_FROM = "+14472288335";
 
+type Turn = { role: "user" | "assistant"; content: string; at: number };
+
 export function AiVoiceCall({
   defaultTo = "",
   defaultScript = "Hello, this is Negotiator AI calling on behalf of a customer to negotiate a residential moving quote. I am an AI agent. Can I speak with a dispatcher about a pending estimate?",
+  defaultContext = "Move: 2-bed apartment, ~40 mi, Sat June 14.\nCustomer's target price: $1,850.\nCompeting verified quotes: $1,920 (AllStar Moving, DOT 123456), $2,100 (BlueBox Movers, DOT 654321).\nGoal: get this business to commit to $1,850 or lower with same inclusions (packing materials, 2 movers, insurance).",
 }: {
   defaultTo?: string;
   defaultScript?: string;
+  defaultContext?: string;
 }) {
   const place = useServerFn(placeAiVoiceCall);
   const status = useServerFn(getCallStatus);
@@ -22,6 +26,7 @@ export function AiVoiceCall({
   const [to, setTo] = useState(defaultTo);
   const [from, setFrom] = useState(DEFAULT_FROM);
   const [script, setScript] = useState(defaultScript);
+  const [context, setContext] = useState(defaultContext);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [call, setCall] = useState<{
@@ -31,6 +36,8 @@ export function AiVoiceCall({
     startTime?: string | null;
     endTime?: string | null;
   } | null>(null);
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const feedRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!call || TERMINAL.has(call.status)) return;
@@ -55,9 +62,35 @@ export function AiVoiceCall({
     };
   }, [call, status]);
 
+  // Poll live transcript.
+  useEffect(() => {
+    if (!call) return;
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const r = await fetch(`/api/public/voice-turn?sid=${encodeURIComponent(call.sid)}`);
+        const j = (await r.json()) as { turns?: Turn[] };
+        if (!cancelled && Array.isArray(j.turns)) setTurns(j.turns);
+      } catch {
+        /* ignore */
+      }
+    };
+    tick();
+    const id = setInterval(tick, 2500);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [call]);
+
+  useEffect(() => {
+    feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: "smooth" });
+  }, [turns.length]);
+
   async function onPlace() {
     setError(null);
     setPlacing(true);
+    setTurns([]);
     try {
       const vs = readVoiceSettings();
       const r = await place({
@@ -68,6 +101,8 @@ export function AiVoiceCall({
           origin: window.location.origin,
           voiceId: vs.agentVoice,
           speed: vs.speed,
+          context: context.trim(),
+          maxTurns: 8,
         },
       });
       if (!r.ok) {
@@ -92,9 +127,9 @@ export function AiVoiceCall({
             <PhoneCall className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <div className="text-sm font-semibold">AI voice call</div>
+            <div className="text-sm font-semibold">AI negotiator call (two-way)</div>
             <div className="text-xs text-muted-foreground">
-              Twilio dials the business, ElevenLabs speaks the negotiator script.
+              Twilio dials → ElevenLabs speaks → rep replies → GPT drafts next line → repeat.
             </div>
           </div>
         </div>
@@ -125,16 +160,29 @@ export function AiVoiceCall({
         </div>
       </div>
       <div>
-        <label className="text-xs font-medium text-muted-foreground">Opening script (spoken by ElevenLabs)</label>
+        <label className="text-xs font-medium text-muted-foreground">Opening line (ElevenLabs speaks first)</label>
         <textarea
           value={script}
           onChange={(e) => setScript(e.target.value)}
-          rows={4}
+          rows={3}
           className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           maxLength={1500}
         />
+        <div className="mt-1 text-[10px] text-muted-foreground">{script.length}/1500</div>
+      </div>
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">
+          Negotiation context (job details, target price, competing quotes — GPT uses this every turn)
+        </label>
+        <textarea
+          value={context}
+          onChange={(e) => setContext(e.target.value)}
+          rows={5}
+          className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/40"
+          maxLength={2000}
+        />
         <div className="mt-1 text-[10px] text-muted-foreground">
-          Includes AI disclosure. {script.length}/1500
+          Zero-fabrication: only facts placed here can be used on the call. {context.length}/2000
         </div>
       </div>
 
@@ -164,6 +212,32 @@ export function AiVoiceCall({
         </div>
       )}
 
+      {turns.length > 0 && (
+        <div>
+          <div className="mb-2 text-xs font-semibold text-muted-foreground">Live transcript</div>
+          <div
+            ref={feedRef}
+            className="max-h-64 overflow-y-auto rounded-md border bg-background/50 p-3 space-y-2"
+          >
+            {turns.map((t, i) => (
+              <div key={i} className="flex gap-2 text-xs">
+                {t.role === "assistant" ? (
+                  <Bot className="h-4 w-4 shrink-0 text-primary" />
+                ) : (
+                  <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                )}
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {t.role === "assistant" ? "Negotiator AI" : "Business rep"}
+                  </div>
+                  <div>{t.content}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-end">
         <Button onClick={onPlace} disabled={placing || !to || !from || !script}>
           {placing ? (
@@ -172,7 +246,7 @@ export function AiVoiceCall({
             </>
           ) : (
             <>
-              <PhoneCall className="mr-2 h-4 w-4" /> Place AI voice call
+              <PhoneCall className="mr-2 h-4 w-4" /> Start negotiator call
             </>
           )}
         </Button>

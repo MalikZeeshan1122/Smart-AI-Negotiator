@@ -33,6 +33,8 @@ export const placeAiVoiceCall = createServerFn({ method: "POST" })
       origin: string;
       voiceId?: string;
       speed?: number;
+      context?: string;
+      maxTurns?: number;
     }) => {
       const norm = (s: string) => {
         const t = (s ?? "").replace(/[\s()\-.]/g, "");
@@ -69,14 +71,13 @@ export const placeAiVoiceCall = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Twilio not configured" };
     }
 
-    // Force a publicly reachable host — *.lovableproject.com and
-    // id-preview--*.lovable.app are auth-gated so Twilio's fetcher gets a 302
-    // and falls back to a generic voice. Map to the stable public preview URL.
     const publicOrigin = toPublicOrigin(data.origin);
 
     const twimlParams = new URLSearchParams({ script: data.script });
     if (data.voiceId) twimlParams.set("voiceId", data.voiceId);
     if (data.speed) twimlParams.set("speed", String(data.speed));
+    if (data.context) twimlParams.set("ctx", data.context.slice(0, 2000));
+    if (data.maxTurns) twimlParams.set("maxTurns", String(data.maxTurns));
     const twimlUrl = `${publicOrigin}/api/public/twiml?${twimlParams.toString()}`;
 
     const body = new URLSearchParams({

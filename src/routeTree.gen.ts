@@ -15,6 +15,7 @@ import { Route as NewRouteImport } from './routes/new'
 import { Route as DryRunRouteImport } from './routes/dry-run'
 import { Route as CallsRouteImport } from './routes/calls'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicVoiceTurnRouteImport } from './routes/api/public/voice-turn'
 import { Route as ApiPublicTwimlRouteImport } from './routes/api/public/twiml'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
 
@@ -48,6 +49,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVoiceTurnRoute = ApiPublicVoiceTurnRouteImport.update({
+  id: '/api/public/voice-turn',
+  path: '/api/public/voice-turn',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTwimlRoute = ApiPublicTwimlRouteImport.update({
   id: '/api/public/twiml',
   path: '/api/public/twiml',
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/report': typeof ReportRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/api/public/twiml': typeof ApiPublicTwimlRoute
+  '/api/public/voice-turn': typeof ApiPublicVoiceTurnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/report': typeof ReportRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/api/public/twiml': typeof ApiPublicTwimlRoute
+  '/api/public/voice-turn': typeof ApiPublicVoiceTurnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/report': typeof ReportRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/api/public/twiml': typeof ApiPublicTwimlRoute
+  '/api/public/voice-turn': typeof ApiPublicVoiceTurnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/api/public/tts'
     | '/api/public/twiml'
+    | '/api/public/voice-turn'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/api/public/tts'
     | '/api/public/twiml'
+    | '/api/public/voice-turn'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/api/public/tts'
     | '/api/public/twiml'
+    | '/api/public/voice-turn'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   ReportRoute: typeof ReportRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
   ApiPublicTwimlRoute: typeof ApiPublicTwimlRoute
+  ApiPublicVoiceTurnRoute: typeof ApiPublicVoiceTurnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/voice-turn': {
+      id: '/api/public/voice-turn'
+      path: '/api/public/voice-turn'
+      fullPath: '/api/public/voice-turn'
+      preLoaderRoute: typeof ApiPublicVoiceTurnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/twiml': {
       id: '/api/public/twiml'
       path: '/api/public/twiml'
@@ -204,6 +224,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportRoute: ReportRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
   ApiPublicTwimlRoute: ApiPublicTwimlRoute,
+  ApiPublicVoiceTurnRoute: ApiPublicVoiceTurnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,29 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { chunk, esc } from "@/lib/twiml-utils";
 
 const VOICE_ID_RE = /^[A-Za-z0-9]{16,32}$/;
-
-function esc(s: string) {
-  return s.replace(/[<>&"']/g, (c) =>
-    c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;" : c === '"' ? "&quot;" : "&apos;",
-  );
-}
-
-// Splits long script into chunks that fit ElevenLabs TTS well.
-function chunk(text: string, max = 500): string[] {
-  const parts: string[] = [];
-  const sentences = text.match(/[^.!?]+[.!?]?\s*/g) ?? [text];
-  let cur = "";
-  for (const s of sentences) {
-    if ((cur + s).length > max) {
-      if (cur) parts.push(cur.trim());
-      cur = s;
-    } else {
-      cur += s;
-    }
-  }
-  if (cur.trim()) parts.push(cur.trim());
-  return parts;
-}
 
 export const Route = createFileRoute("/api/public/twiml")({
   server: {
@@ -33,6 +11,8 @@ export const Route = createFileRoute("/api/public/twiml")({
         const script = url.searchParams.get("script")?.slice(0, 1500) ?? "";
         const voiceIdParam = url.searchParams.get("voiceId") ?? "";
         const speed = url.searchParams.get("speed") ?? "";
+        const ctx = url.searchParams.get("ctx") ?? "";
+        const maxTurns = url.searchParams.get("maxTurns") ?? "8";
         const voiceId = VOICE_ID_RE.test(voiceIdParam) ? voiceIdParam : "";
 
         const origin = `${url.protocol}//${url.host}`;
@@ -47,11 +27,18 @@ export const Route = createFileRoute("/api/public/twiml")({
           })
           .join("\n  ");
 
+        // Hand off to the two-way negotiation loop.
+        const nextParams = new URLSearchParams();
+        if (ctx) nextParams.set("ctx", ctx);
+        if (voiceId) nextParams.set("voiceId", voiceId);
+        if (speed) nextParams.set("speed", speed);
+        nextParams.set("maxTurns", maxTurns);
+        const gatherUrl = `${origin}/api/public/voice-turn?${nextParams.toString()}`;
+
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   ${plays || "<Say>Hello from Negotiator AI.</Say>"}
-  <Pause length="1"/>
-  <Hangup/>
+  <Gather input="speech" action="${esc(gatherUrl)}" method="POST" speechTimeout="auto" language="en-US" actionOnEmptyResult="true"/>
 </Response>`;
 
         return new Response(xml, {
