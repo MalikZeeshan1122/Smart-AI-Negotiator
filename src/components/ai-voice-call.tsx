@@ -3,8 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { placeAiVoiceCall, getCallStatus, listCallRecordings } from "@/lib/voice-call.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio, Bot, User } from "lucide-react";
+import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio, Bot, User, ShieldCheck } from "lucide-react";
 import { readVoiceSettings } from "@/lib/voice-settings";
+import { VerifyNumberModal, isUnverifiedNumberError } from "@/components/verify-number-modal";
 
 const TERMINAL = new Set(["completed", "failed", "busy", "no-answer", "canceled"]);
 const DEFAULT_FROM = "+14472288335";
@@ -42,6 +43,7 @@ export function AiVoiceCall({
     Array<{ sid: string; url: string; duration: string | null; dateCreated: string; status: string }>
   >([]);
   const feedRef = useRef<HTMLDivElement | null>(null);
+  const [verifyOpen, setVerifyOpen] = useState(false);
 
   useEffect(() => {
     if (!call || TERMINAL.has(call.status)) return;
@@ -135,9 +137,12 @@ export function AiVoiceCall({
         },
       });
       if (!r.ok) {
-        setError(r.error || "Failed to place call");
+        const msg = r.error || "Failed to place call";
+        setError(msg);
+        if (isUnverifiedNumberError(msg)) setVerifyOpen(true);
       } else {
         setCall({ sid: r.sid, status: r.status });
+        setVerifyOpen(false);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to place call");
@@ -216,10 +221,31 @@ export function AiVoiceCall({
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/5 p-3 text-xs text-red-600 dark:text-red-400">
-          {error}
+        <div className="rounded-md border border-red-500/30 bg-red-500/5 p-3 text-xs text-red-600 dark:text-red-400 space-y-2">
+          <div>{error}</div>
+          {isUnverifiedNumberError(error) && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setVerifyOpen(true)}
+              className="h-7 text-xs"
+            >
+              <ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Verify this number in Twilio
+            </Button>
+          )}
         </div>
       )}
+
+      <VerifyNumberModal
+        open={verifyOpen}
+        onOpenChange={setVerifyOpen}
+        phone={to.trim()}
+        retrying={placing}
+        onRetry={async () => {
+          await onPlace();
+        }}
+      />
+
 
       {call && (
         <div className="rounded-md border bg-muted/30 p-3 text-xs space-y-1">
