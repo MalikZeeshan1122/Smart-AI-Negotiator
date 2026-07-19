@@ -16,18 +16,35 @@ export const placeAiVoiceCall = createServerFn({ method: "POST" })
       voiceId?: string;
       speed?: number;
     }) => {
-      if (!E164.test(data.to)) throw new Error("Invalid 'to' phone (E.164)");
-      if (!E164.test(data.from)) throw new Error("Invalid 'from' phone (E.164)");
-      if (!data.script || data.script.length > 1500)
-        throw new Error("Script required (max 1500 chars)");
-      if (!/^https?:\/\//.test(data.origin))
-        throw new Error("Invalid origin");
-      if (data.voiceId && !VOICE_ID_RE.test(data.voiceId))
-        throw new Error("Invalid voiceId");
-      return data;
+      const norm = (s: string) => {
+        const t = (s ?? "").replace(/[\s()\-.]/g, "");
+        if (t.startsWith("00")) return "+" + t.slice(2);
+        return t;
+      };
+      return {
+        ...data,
+        to: norm(data.to),
+        from: norm(data.from),
+      };
     },
   )
   .handler(async ({ data }) => {
+    if (!E164.test(data.to)) {
+      return { ok: false as const, error: `Invalid 'to' phone (must be E.164, e.g. +15551234567): ${data.to}` };
+    }
+    if (!E164.test(data.from)) {
+      return { ok: false as const, error: `Invalid 'from' phone (must be E.164): ${data.from}` };
+    }
+    if (!data.script || data.script.length > 1500) {
+      return { ok: false as const, error: "Script required (max 1500 chars)" };
+    }
+    if (!/^https?:\/\//.test(data.origin)) {
+      return { ok: false as const, error: "Invalid origin" };
+    }
+    if (data.voiceId && !VOICE_ID_RE.test(data.voiceId)) {
+      return { ok: false as const, error: "Invalid voiceId" };
+    }
+
     const lovableKey = process.env.LOVABLE_API_KEY;
     const twilioKey = process.env.TWILIO_API_KEY;
     if (!lovableKey || !twilioKey) {
