@@ -53,12 +53,27 @@ function Report() {
   const [ackTerms, setAckTerms] = useState(false);
   const [ackAuthorize, setAckAuthorize] = useState(false);
   const [booked, setBooked] = useState(false);
+  const [specHash, setSpecHash] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const canConfirm = ackTranscript && ackTerms && ackAuthorize;
+
+  useEffect(() => {
+    buildAuditBundle(activeJob).then((b) => setSpecHash(b.job.specHash));
+  }, []);
 
   const confirmBooking = () => {
     if (!canConfirm) return;
     setBooked(true);
     setDialogOpen(false);
+  };
+
+  const onDownloadBundle = async () => {
+    setDownloading(true);
+    try {
+      await downloadAuditBundle(activeJob);
+    } finally {
+      setDownloading(false);
+    }
   };
 
 
