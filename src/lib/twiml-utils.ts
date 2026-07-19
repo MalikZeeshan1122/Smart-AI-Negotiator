@@ -23,7 +23,7 @@ export function chunk(text: string, max = 500): string[] {
 // In-memory transcript per Twilio CallSid. Fine for a single-worker demo;
 // resets on redeploy. UI polls the /api/public/voice-turn?sid=... GET endpoint.
 export type Turn = { role: "user" | "assistant"; content: string; at: number };
-type State = { turns: Turn[]; ctx: string; count: number };
+type State = { turns: Turn[]; ctx: string; count: number; emptyStreak: number };
 const store = new Map<string, State>();
 
 export function getState(sid: string): State | undefined {
@@ -32,7 +32,7 @@ export function getState(sid: string): State | undefined {
 export function ensureState(sid: string, ctx: string): State {
   let s = store.get(sid);
   if (!s) {
-    s = { turns: [], ctx, count: 0 };
+    s = { turns: [], ctx, count: 0, emptyStreak: 0 };
     store.set(sid, s);
   }
   return s;
