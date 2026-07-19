@@ -85,6 +85,9 @@ export const placeAiVoiceCall = createServerFn({ method: "POST" })
       From: data.from,
       Url: twimlUrl,
       Method: "GET",
+      Record: "true",
+      RecordingChannels: "dual",
+      RecordingTrack: "both",
     });
 
     const res = await fetch(`${GATEWAY}/Calls.json`, {
