@@ -25,11 +25,11 @@ export const Route = createFileRoute("/")({
         content:
           "Negotiator AI calls businesses, extracts quotes, negotiates prices, and recommends the best deal — with full transcripts and evidence.",
       },
-      { property: "og:title", content: "Negotiator AI — Never overpay again" },
+      { property: "og:title", content: "Negotiator AI — Autonomous voice negotiation" },
       {
         property: "og:description",
         content:
-          "Autonomous AI voice agent that negotiates on your behalf across moving, medical, auto, and more.",
+          "Negotiator AI calls businesses, extracts quotes, negotiates prices, and recommends the best deal — with full transcripts and evidence.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

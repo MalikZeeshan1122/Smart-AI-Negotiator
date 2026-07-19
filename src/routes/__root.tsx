@@ -82,9 +82,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "AI voice agents that call businesses, extract quotes, negotiate better prices, and recommend the best deal — with full transcripts and evidence.",
+          "Negotiator AI calls businesses, extracts quotes, negotiates prices, and recommends the best deal — with full transcripts and evidence.",
       },
       { name: "theme-color", content: "#fafbff" },
+      { property: "og:title", content: "Negotiator AI — Autonomous voice negotiation" },
+      { name: "twitter:title", content: "Negotiator AI — Autonomous voice negotiation" },
+      { property: "og:description", content: "Negotiator AI calls businesses, extracts quotes, negotiates prices, and recommends the best deal — with full transcripts and evidence." },
+      { name: "twitter:description", content: "Negotiator AI calls businesses, extracts quotes, negotiates prices, and recommends the best deal — with full transcripts and evidence." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b3015729-368c-4265-9e5e-a46a58dbbb5e/id-preview-e9b5c0b2--d47d4a0d-5af1-4542-955f-367e2d8762e9.lovable.app-1784461402984.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b3015729-368c-4265-9e5e-a46a58dbbb5e/id-preview-e9b5c0b2--d47d4a0d-5af1-4542-955f-367e2d8762e9.lovable.app-1784461402984.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
