@@ -39,12 +39,70 @@ const services = [
 const MAX_BYTES = 20 * 1024 * 1024;
 const ACCEPT = ".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg";
 
+type OcrField = { key: string; label: string; value: string; confidence: number };
+type OcrResult = {
+  status: "processing" | "done";
+  text: string;
+  fields: OcrField[];
+};
 type UploadedFile = { id: string; name: string; size: number; type: string };
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Deterministic mock OCR — picks a fixture based on filename hints.
+function mockOcrFor(file: UploadedFile): OcrResult {
+  const n = file.name.toLowerCase();
+  const isPhoto = /\.(png|jpe?g)$/i.test(file.name) || /image/i.test(file.type);
+
+  if (isPhoto) {
+    return {
+      status: "done",
+      text:
+        "[image] Interior photo — living room. Detected: 1 sectional sofa, 55\" TV + wall mount, " +
+        "bookshelf (tall, ~7ft), 2 large moving boxes, area rug. Estimated cubic feet: 210–240. " +
+        "No visible piano. Stairs visible through doorway (walkup indicator).",
+      fields: [
+        { key: "inventory", label: "Detected inventory", value: "Sectional, 55\" TV, tall bookshelf, 2 boxes, rug", confidence: 0.82 },
+        { key: "cuft", label: "Est. cubic feet", value: "210–240 cu ft", confidence: 0.71 },
+        { key: "stairs", label: "Stairs indicator", value: "Likely (walkup)", confidence: 0.66 },
+      ],
+    };
+  }
+
+  // PDF quote fixture
+  const vendor = n.includes("peach")
+    ? "Peachtree Van Lines"
+    : n.includes("quick")
+    ? "QuickHaul Express"
+    : "Blue Ridge Movers";
+  return {
+    status: "done",
+    text:
+      `${vendor.toUpperCase()} — WRITTEN ESTIMATE\n` +
+      `Origin: 812 Tryon St, Charlotte, NC 28202\n` +
+      `Destination: 145 Peachtree St NE, Atlanta, GA 30303\n` +
+      `Move date: 2026-08-01   Crew: 3 movers, 26' truck\n` +
+      `Hourly: $185/hr  Est. hours: 9.5  Fuel surcharge: $220\n` +
+      `Stairs fee: $75/flight  Long-carry (>75ft): $95\n` +
+      `Piano handling: $250  Packing materials: $180\n` +
+      `Binding total: $2,542.50   Deposit: $300 (non-refundable)`,
+    fields: [
+      { key: "vendor", label: "Vendor", value: vendor, confidence: 0.98 },
+      { key: "origin", label: "Origin", value: "Charlotte, NC 28202", confidence: 0.94 },
+      { key: "destination", label: "Destination", value: "Atlanta, GA 30303", confidence: 0.94 },
+      { key: "date", label: "Move date", value: "2026-08-01", confidence: 0.91 },
+      { key: "hourly", label: "Hourly rate", value: "$185/hr", confidence: 0.9 },
+      { key: "total", label: "Binding total", value: "$2,542.50", confidence: 0.88 },
+      { key: "fuel", label: "Fuel surcharge", value: "$220", confidence: 0.86 },
+      { key: "stairs_fee", label: "Stairs fee", value: "$75/flight", confidence: 0.83 },
+      { key: "piano", label: "Piano handling", value: "$250", confidence: 0.79 },
+      { key: "deposit", label: "Deposit", value: "$300 non-refundable", confidence: 0.81 },
+    ],
+  };
 }
 
 function NewNegotiation() {
