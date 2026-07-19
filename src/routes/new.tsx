@@ -385,11 +385,18 @@ function NewNegotiation() {
                     const selected = selectedFileId === f.id;
                     return (
                       <li key={f.id}>
-                        <button
-                          type="button"
+                        <div
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setSelectedFileId(f.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedFileId(f.id);
+                            }
+                          }}
                           className={cn(
-                            "w-full flex items-center gap-3 rounded-md border px-3 py-2 text-left transition-colors",
+                            "w-full flex items-center gap-3 rounded-md border px-3 py-2 text-left cursor-pointer transition-colors",
                             selected
                               ? "border-primary/50 bg-primary/10"
                               : "border-border bg-surface/40 hover:bg-surface/60",
@@ -423,8 +430,9 @@ function NewNegotiation() {
                           >
                             <X className="size-4" />
                           </button>
-                        </button>
+                        </div>
                       </li>
+
                     );
                   })}
                 </ul>
