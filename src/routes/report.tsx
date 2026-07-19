@@ -89,10 +89,34 @@ function Report() {
             {activeJob.origin} → {activeJob.destination} · {activeJob.date} · 2-bedroom
           </p>
         </div>
-        <Button variant="secondary" className="gap-2">
-          <Download className="size-4" />
-          Download PDF
-        </Button>
+        <div className="flex items-center gap-3">
+          {specHash && (
+            <div className="hidden md:flex items-center gap-2 rounded-md border border-border bg-surface/60 px-3 py-2">
+              <Fingerprint className="size-3.5 text-primary" />
+              <div className="leading-tight">
+                <div className="mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                  JobSpec hash
+                </div>
+                <div className="mono text-[11px] tabular-nums">
+                  {specHash.slice(0, 12)}…
+                </div>
+              </div>
+            </div>
+          )}
+          <Button
+            variant="secondary"
+            className="gap-2"
+            onClick={onDownloadBundle}
+            disabled={downloading}
+          >
+            {downloading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <FileArchive className="size-4" />
+            )}
+            Download audit bundle
+          </Button>
+        </div>
       </div>
 
       <div className="panel p-8 mb-6 relative overflow-hidden">
