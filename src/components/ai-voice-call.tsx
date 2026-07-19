@@ -87,6 +87,31 @@ export function AiVoiceCall({
     };
   }, [call]);
 
+  // Once call ends (or periodically while active), fetch recordings.
+  useEffect(() => {
+    if (!call) return;
+    let cancelled = false;
+    const fetchRec = async () => {
+      try {
+        const r = await listRecordings({ data: { sid: call.sid } });
+        if (!cancelled && r.ok) setRecordings(r.recordings);
+      } catch {
+        /* ignore */
+      }
+    };
+    fetchRec();
+    // Twilio finalizes recordings a few seconds after hangup — poll a bit longer.
+    const id = setInterval(fetchRec, 5000);
+    const stop = TERMINAL.has(call.status)
+      ? setTimeout(() => clearInterval(id), 30_000)
+      : null;
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      if (stop) clearTimeout(stop);
+    };
+  }, [call, listRecordings]);
+
   useEffect(() => {
     feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: "smooth" });
   }, [turns.length]);
