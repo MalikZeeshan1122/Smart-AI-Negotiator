@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { chunk, esc } from "@/lib/twiml-utils";
+import { esc } from "@/lib/twiml-utils";
 
 const VOICE_ID_RE = /^[A-Za-z0-9]{16,32}$/;
 
@@ -16,18 +16,13 @@ export const Route = createFileRoute("/api/public/twiml")({
         const voiceId = VOICE_ID_RE.test(voiceIdParam) ? voiceIdParam : "";
 
         const origin = `${url.protocol}//${url.host}`;
-        const parts = chunk(script);
 
-        const plays = parts
-          .map((p) => {
-            const q = new URLSearchParams({ text: p });
-            if (voiceId) q.set("voiceId", voiceId);
-            if (speed) q.set("speed", speed);
-            return `<Play>${esc(`${origin}/api/public/tts?${q.toString()}`)}</Play>`;
-          })
-          .join("\n  ");
+        // One single TTS request for the whole opener — no mid-sentence gaps.
+        const q = new URLSearchParams({ text: script });
+        if (voiceId) q.set("voiceId", voiceId);
+        if (speed) q.set("speed", speed);
+        const openerUrl = `${origin}/api/public/tts?${q.toString()}`;
 
-        // Hand off to the two-way negotiation loop.
         const nextParams = new URLSearchParams();
         if (ctx) nextParams.set("ctx", ctx);
         if (voiceId) nextParams.set("voiceId", voiceId);
@@ -35,10 +30,15 @@ export const Route = createFileRoute("/api/public/twiml")({
         nextParams.set("maxTurns", maxTurns);
         const gatherUrl = `${origin}/api/public/voice-turn?${nextParams.toString()}`;
 
+        // Gather with nested <Play> lets Twilio start listening the moment
+        // the opener finishes, and barge-in is enabled so the rep can
+        // interrupt. speechModel=phone_call + enhanced dramatically improves
+        // recognition on real phone audio.
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  ${plays || "<Say>Hello from Negotiator AI.</Say>"}
-  <Gather input="speech" action="${esc(gatherUrl)}" method="POST" speechTimeout="auto" language="en-US" actionOnEmptyResult="true"/>
+  <Gather input="speech" action="${esc(gatherUrl)}" method="POST" speechTimeout="auto" timeout="8" language="en-US" speechModel="phone_call" enhanced="true" actionOnEmptyResult="true" bargeIn="true">
+    <Play>${esc(openerUrl)}</Play>
+  </Gather>
 </Response>`;
 
         return new Response(xml, {

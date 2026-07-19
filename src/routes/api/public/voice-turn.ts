@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { chunk, clearState, ensureState, esc, getState, type Turn } from "@/lib/twiml-utils";
+import { clearState, ensureState, esc, getState, type Turn } from "@/lib/twiml-utils";
 
 async function draftReply(
   ctx: string,
@@ -64,24 +64,27 @@ function buildTwiml(opts: {
   speed: string;
   nextUrl: string | null;
 }) {
-  const parts = chunk(opts.reply);
-  const plays = parts
-    .map((p) => {
-      const q = new URLSearchParams({ text: p });
-      if (opts.voiceId) q.set("voiceId", opts.voiceId);
-      if (opts.speed) q.set("speed", opts.speed);
-      return `<Play>${esc(`${opts.origin}/api/public/tts?${q.toString()}`)}</Play>`;
-    })
-    .join("\n  ");
+  const q = new URLSearchParams({ text: opts.reply });
+  if (opts.voiceId) q.set("voiceId", opts.voiceId);
+  if (opts.speed) q.set("speed", opts.speed);
+  const playUrl = `${opts.origin}/api/public/tts?${q.toString()}`;
 
-  const tail = opts.nextUrl
-    ? `<Gather input="speech" action="${esc(opts.nextUrl)}" method="POST" speechTimeout="auto" language="en-US" actionOnEmptyResult="true"/>`
-    : `<Pause length="1"/><Hangup/>`;
+  if (!opts.nextUrl) {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Play>${esc(playUrl)}</Play>
+  <Pause length="1"/>
+  <Hangup/>
+</Response>`;
+  }
 
+  // Nested <Play> inside <Gather> lets the rep barge in and starts listening
+  // the instant the assistant finishes speaking — feels natural, not scripted.
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  ${plays}
-  ${tail}
+  <Gather input="speech" action="${esc(opts.nextUrl)}" method="POST" speechTimeout="auto" timeout="8" language="en-US" speechModel="phone_call" enhanced="true" actionOnEmptyResult="true" bargeIn="true">
+    <Play>${esc(playUrl)}</Play>
+  </Gather>
 </Response>`;
 }
 
@@ -102,10 +105,29 @@ export const Route = createFileRoute("/api/public/voice-turn")({
         const origin = `${url.protocol}//${url.host}`;
 
         const state = ensureState(callSid, ctx);
-        if (speech) state.turns.push({ role: "user", content: speech, at: Date.now() });
+        if (speech) {
+          state.turns.push({ role: "user", content: speech, at: Date.now() });
+          state.emptyStreak = 0;
+        } else {
+          state.emptyStreak = (state.emptyStreak ?? 0) + 1;
+        }
         state.count++;
 
-        const { text: reply, end: modelEnd } = await draftReply(state.ctx || ctx, state.turns);
+        // If the other side has been silent for 2 gathers in a row, stop
+        // monologuing — say one closing line and hang up. This is the main
+        // fix for "AI keeps repeating itself to hold music / voicemail".
+        const silenceEnd = state.emptyStreak >= 2;
+
+        let reply: string;
+        let modelEnd = false;
+        if (silenceEnd) {
+          reply = "I'm not hearing anyone on the line. I'll try again later. Thank you.";
+          modelEnd = true;
+        } else {
+          const r = await draftReply(state.ctx || ctx, state.turns);
+          reply = r.text;
+          modelEnd = r.end;
+        }
         state.turns.push({ role: "assistant", content: reply, at: Date.now() });
         const end = modelEnd || state.count >= maxTurns;
 

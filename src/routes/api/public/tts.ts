@@ -53,9 +53,9 @@ export const Route = createFileRoute("/api/public/tts")({
               text,
               model_id: "eleven_turbo_v2_5",
               voice_settings: {
-                stability: 0.5,
-                similarity_boost: 0.75,
-                style: 0.3,
+                stability: 0.35,
+                similarity_boost: 0.8,
+                style: 0.55,
                 use_speaker_boost: true,
                 speed,
               },
@@ -77,7 +77,7 @@ export const Route = createFileRoute("/api/public/tts")({
           status: 200,
           headers: {
             "content-type": "audio/mpeg",
-            "cache-control": "public, max-age=86400",
+            "cache-control": "public, max-age=3600",
           },
         });
       },
