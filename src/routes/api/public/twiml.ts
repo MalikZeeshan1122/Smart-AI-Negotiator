@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { esc } from "@/lib/twiml-utils";
+import { esc, gatherOpenTag, normalizeLanguage } from "@/lib/twiml-utils";
 
 const VOICE_ID_RE = /^[A-Za-z0-9]{16,32}$/;
 
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/api/public/twiml")({
         const speed = url.searchParams.get("speed") ?? "";
         const ctx = url.searchParams.get("ctx") ?? "";
         const maxTurns = url.searchParams.get("maxTurns") ?? "8";
+        const lang = normalizeLanguage(url.searchParams.get("lang"));
         const voiceId = VOICE_ID_RE.test(voiceIdParam) ? voiceIdParam : "";
 
         const origin = `${url.protocol}//${url.host}`;
@@ -28,15 +29,16 @@ export const Route = createFileRoute("/api/public/twiml")({
         if (voiceId) nextParams.set("voiceId", voiceId);
         if (speed) nextParams.set("speed", speed);
         nextParams.set("maxTurns", maxTurns);
+        nextParams.set("lang", lang);
         const gatherUrl = `${origin}/api/public/voice-turn?${nextParams.toString()}`;
 
         // Gather with nested <Play> lets Twilio start listening the moment
         // the opener finishes, and barge-in is enabled so the rep can
-        // interrupt. speechModel=phone_call + enhanced dramatically improves
-        // recognition on real phone audio.
+        // interrupt. Speech model is picked per language (English → phone_call,
+        // others → googlev2_long) so non-English callers are actually heard.
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="${esc(gatherUrl)}" method="POST" speechTimeout="auto" timeout="8" language="en-US" speechModel="phone_call" enhanced="true" actionOnEmptyResult="true" bargeIn="true">
+  ${gatherOpenTag(gatherUrl, lang)}
     <Play>${esc(openerUrl)}</Play>
   </Gather>
 </Response>`;
@@ -52,3 +54,4 @@ export const Route = createFileRoute("/api/public/twiml")({
     },
   },
 });
+
