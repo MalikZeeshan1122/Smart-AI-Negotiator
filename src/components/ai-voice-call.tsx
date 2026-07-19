@@ -3,8 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { placeAiVoiceCall, getCallStatus, listCallRecordings } from "@/lib/voice-call.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio, Bot, User } from "lucide-react";
+import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio, Bot, User, ShieldCheck } from "lucide-react";
 import { readVoiceSettings } from "@/lib/voice-settings";
+import { VerifyNumberModal, isUnverifiedNumberError } from "@/components/verify-number-modal";
 
 const TERMINAL = new Set(["completed", "failed", "busy", "no-answer", "canceled"]);
 const DEFAULT_FROM = "+14472288335";
