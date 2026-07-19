@@ -111,6 +111,8 @@ function LiveCalls() {
         </div>
       </div>
 
+      <TwilioSmsStatus />
+
       <div className="mb-6 rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
         <ShieldCheck className="size-4 text-primary shrink-0 mt-0.5" />
         <div className="text-xs text-muted-foreground">
