@@ -35,6 +35,7 @@ export const placeAiVoiceCall = createServerFn({ method: "POST" })
       speed?: number;
       context?: string;
       maxTurns?: number;
+      language?: string;
     }) => {
       const norm = (s: string) => {
         const t = (s ?? "").replace(/[\s()\-.]/g, "");
@@ -78,6 +79,7 @@ export const placeAiVoiceCall = createServerFn({ method: "POST" })
     if (data.speed) twimlParams.set("speed", String(data.speed));
     if (data.context) twimlParams.set("ctx", data.context.slice(0, 2000));
     if (data.maxTurns) twimlParams.set("maxTurns", String(data.maxTurns));
+    if (data.language) twimlParams.set("lang", data.language);
     const twimlUrl = `${publicOrigin}/api/public/twiml?${twimlParams.toString()}`;
 
     const body = new URLSearchParams({
