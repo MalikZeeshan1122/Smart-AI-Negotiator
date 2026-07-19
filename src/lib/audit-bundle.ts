@@ -48,7 +48,7 @@ export type AuditBundle = {
     company: string;
     phone: string;
     callDurationSec: number;
-    turns: Quote["transcript"];
+    turns: Array<Quote["transcript"][number] & { audioUrl: string }>;
   }>;
   recordings: Array<{
     quoteId: string;
