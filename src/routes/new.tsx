@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useRef, useState } from "react";
-import { FileText, Image as ImageIcon, X } from "lucide-react";
+import { FileText, Image as ImageIcon, X, Loader2, ScanText } from "lucide-react";
 import {
   Truck,
   Stethoscope,
@@ -39,6 +39,12 @@ const services = [
 const MAX_BYTES = 20 * 1024 * 1024;
 const ACCEPT = ".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg";
 
+type OcrField = { key: string; label: string; value: string; confidence: number };
+type OcrResult = {
+  status: "processing" | "done";
+  text: string;
+  fields: OcrField[];
+};
 type UploadedFile = { id: string; name: string; size: number; type: string };
 
 function formatSize(bytes: number) {
@@ -47,10 +53,64 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// Deterministic mock OCR — picks a fixture based on filename hints.
+function mockOcrFor(file: UploadedFile): OcrResult {
+  const n = file.name.toLowerCase();
+  const isPhoto = /\.(png|jpe?g)$/i.test(file.name) || /image/i.test(file.type);
+
+  if (isPhoto) {
+    return {
+      status: "done",
+      text:
+        "[image] Interior photo — living room. Detected: 1 sectional sofa, 55\" TV + wall mount, " +
+        "bookshelf (tall, ~7ft), 2 large moving boxes, area rug. Estimated cubic feet: 210–240. " +
+        "No visible piano. Stairs visible through doorway (walkup indicator).",
+      fields: [
+        { key: "inventory", label: "Detected inventory", value: "Sectional, 55\" TV, tall bookshelf, 2 boxes, rug", confidence: 0.82 },
+        { key: "cuft", label: "Est. cubic feet", value: "210–240 cu ft", confidence: 0.71 },
+        { key: "stairs", label: "Stairs indicator", value: "Likely (walkup)", confidence: 0.66 },
+      ],
+    };
+  }
+
+  // PDF quote fixture
+  const vendor = n.includes("peach")
+    ? "Peachtree Van Lines"
+    : n.includes("quick")
+    ? "QuickHaul Express"
+    : "Blue Ridge Movers";
+  return {
+    status: "done",
+    text:
+      `${vendor.toUpperCase()} — WRITTEN ESTIMATE\n` +
+      `Origin: 812 Tryon St, Charlotte, NC 28202\n` +
+      `Destination: 145 Peachtree St NE, Atlanta, GA 30303\n` +
+      `Move date: 2026-08-01   Crew: 3 movers, 26' truck\n` +
+      `Hourly: $185/hr  Est. hours: 9.5  Fuel surcharge: $220\n` +
+      `Stairs fee: $75/flight  Long-carry (>75ft): $95\n` +
+      `Piano handling: $250  Packing materials: $180\n` +
+      `Binding total: $2,542.50   Deposit: $300 (non-refundable)`,
+    fields: [
+      { key: "vendor", label: "Vendor", value: vendor, confidence: 0.98 },
+      { key: "origin", label: "Origin", value: "Charlotte, NC 28202", confidence: 0.94 },
+      { key: "destination", label: "Destination", value: "Atlanta, GA 30303", confidence: 0.94 },
+      { key: "date", label: "Move date", value: "2026-08-01", confidence: 0.91 },
+      { key: "hourly", label: "Hourly rate", value: "$185/hr", confidence: 0.9 },
+      { key: "total", label: "Binding total", value: "$2,542.50", confidence: 0.88 },
+      { key: "fuel", label: "Fuel surcharge", value: "$220", confidence: 0.86 },
+      { key: "stairs_fee", label: "Stairs fee", value: "$75/flight", confidence: 0.83 },
+      { key: "piano", label: "Piano handling", value: "$250", confidence: 0.79 },
+      { key: "deposit", label: "Deposit", value: "$300 non-refundable", confidence: 0.81 },
+    ],
+  };
+}
+
 function NewNegotiation() {
   const [step, setStep] = useState(1);
   const [service, setService] = useState("moving");
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [ocr, setOcr] = useState<Record<string, OcrResult>>({});
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -75,11 +135,35 @@ function NewNegotiation() {
         type: f.type,
       });
     }
-    if (accepted.length) setFiles((prev) => [...prev, ...accepted]);
+    if (accepted.length) {
+      setFiles((prev) => [...prev, ...accepted]);
+      // Kick off mock OCR — mark processing immediately, resolve after a short delay.
+      setOcr((prev) => {
+        const next = { ...prev };
+        for (const f of accepted) {
+          next[f.id] = { status: "processing", text: "", fields: [] };
+        }
+        return next;
+      });
+      setSelectedFileId((cur) => cur ?? accepted[0].id);
+      accepted.forEach((f, i) => {
+        const delay = 700 + i * 350 + Math.random() * 400;
+        setTimeout(() => {
+          setOcr((prev) => ({ ...prev, [f.id]: mockOcrFor(f) }));
+        }, delay);
+      });
+    }
   };
 
-  const removeFile = (id: string) =>
+  const removeFile = (id: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
+    setOcr((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setSelectedFileId((cur) => (cur === id ? null : cur));
+  };
 
   return (
     <AppShell>
@@ -292,34 +376,143 @@ function NewNegotiation() {
             )}
 
             {files.length > 0 && (
-              <ul className="mt-4 space-y-2">
-                {files.map((f) => {
-                  const isPdf = /pdf/i.test(f.type) || /\.pdf$/i.test(f.name);
-                  const Icon = isPdf ? FileText : ImageIcon;
-                  return (
-                    <li
-                      key={f.id}
-                      className="flex items-center gap-3 rounded-md border border-border bg-surface/40 px-3 py-2"
-                    >
-                      <Icon className="size-4 text-primary shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm truncate">{f.name}</div>
-                        <div className="mono text-[10px] text-muted-foreground">
-                          {formatSize(f.size)} · queued for OCR
+              <div className="mt-4 grid grid-cols-1 lg:grid-cols-5 gap-4">
+                <ul className="lg:col-span-2 space-y-2">
+                  {files.map((f) => {
+                    const isPdf = /pdf/i.test(f.type) || /\.pdf$/i.test(f.name);
+                    const Icon = isPdf ? FileText : ImageIcon;
+                    const r = ocr[f.id];
+                    const selected = selectedFileId === f.id;
+                    return (
+                      <li key={f.id}>
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setSelectedFileId(f.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedFileId(f.id);
+                            }
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-3 rounded-md border px-3 py-2 text-left cursor-pointer transition-colors",
+                            selected
+                              ? "border-primary/50 bg-primary/10"
+                              : "border-border bg-surface/40 hover:bg-surface/60",
+                          )}
+                        >
+                          <Icon className="size-4 text-primary shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm truncate">{f.name}</div>
+                            <div className="mono text-[10px] text-muted-foreground flex items-center gap-1.5">
+                              {formatSize(f.size)} ·{" "}
+                              {r?.status === "done" ? (
+                                <span className="text-success">
+                                  {r.fields.length} fields extracted
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1">
+                                  <Loader2 className="size-3 animate-spin" />
+                                  running OCR…
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFile(f.id);
+                            }}
+                            className="text-muted-foreground hover:text-foreground p-1"
+                            aria-label={`Remove ${f.name}`}
+                          >
+                            <X className="size-4" />
+                          </button>
                         </div>
+                      </li>
+
+                    );
+                  })}
+                </ul>
+
+                <div className="lg:col-span-3 rounded-lg border border-border bg-surface/40">
+                  {(() => {
+                    const activeId = selectedFileId ?? files[0]?.id ?? null;
+                    const active = files.find((f) => f.id === activeId);
+                    const r = activeId ? ocr[activeId] : undefined;
+                    if (!active) return null;
+                    return (
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <ScanText className="size-4 text-primary" />
+                          <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                            OCR preview
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate ml-1">
+                            · {active.name}
+                          </div>
+                        </div>
+
+                        {!r || r.status === "processing" ? (
+                          <div className="grid place-items-center py-10 text-xs text-muted-foreground">
+                            <Loader2 className="size-5 animate-spin text-primary mb-2" />
+                            Extracting text and fields…
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div>
+                              <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
+                                Extracted text
+                              </div>
+                              <pre className="mono text-[11px] leading-relaxed whitespace-pre-wrap rounded-md border border-border bg-background/60 p-3 max-h-52 overflow-auto">
+{r.text}
+                              </pre>
+                            </div>
+                            <div>
+                              <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
+                                Job-spec fields ({r.fields.length})
+                              </div>
+                              <ul className="divide-y divide-border rounded-md border border-border overflow-hidden">
+                                {r.fields.map((f) => (
+                                  <li
+                                    key={f.key}
+                                    className="flex items-center gap-3 px-3 py-2 bg-background/40"
+                                  >
+                                    <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground w-28 shrink-0">
+                                      {f.label}
+                                    </div>
+                                    <div className="text-sm flex-1 truncate">
+                                      {f.value}
+                                    </div>
+                                    <div
+                                      className={cn(
+                                        "mono text-[10px] px-1.5 py-0.5 rounded",
+                                        f.confidence >= 0.9
+                                          ? "bg-success/15 text-success"
+                                          : f.confidence >= 0.75
+                                          ? "bg-primary/15 text-primary"
+                                          : "bg-warning/15 text-warning",
+                                      )}
+                                    >
+                                      {Math.round(f.confidence * 100)}%
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              Fields will be merged into your job spec on Continue. Low-confidence
+                              values are flagged for review.
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeFile(f.id)}
-                        className="text-muted-foreground hover:text-foreground p-1"
-                        aria-label={`Remove ${f.name}`}
-                      >
-                        <X className="size-4" />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+                    );
+                  })()}
+                </div>
+              </div>
             )}
 
             <div className="mt-4 text-xs text-muted-foreground">
@@ -327,6 +520,7 @@ function NewNegotiation() {
                 ? `${files.length} file${files.length === 1 ? "" : "s"} attached. Continue to dispatch.`
                 : "Optional — skip to dispatch if you don't have any quotes yet."}
             </div>
+
           </div>
         )}
 
