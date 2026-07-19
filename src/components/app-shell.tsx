@@ -7,6 +7,7 @@ import {
   Settings,
   Wallet,
   Radio,
+  FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const nav = [
   { to: "/calls", label: "Live Calls", icon: Radio },
   { to: "/quotes", label: "Quote Board", icon: Wallet },
   { to: "/report", label: "Report", icon: FileText },
+  { to: "/dry-run", label: "Dry Run", icon: FlaskConical },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

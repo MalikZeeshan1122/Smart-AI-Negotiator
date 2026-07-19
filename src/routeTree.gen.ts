@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReportRouteImport } from './routes/report'
 import { Route as QuotesRouteImport } from './routes/quotes'
 import { Route as NewRouteImport } from './routes/new'
+import { Route as DryRunRouteImport } from './routes/dry-run'
 import { Route as CallsRouteImport } from './routes/calls'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -30,6 +31,11 @@ const NewRoute = NewRouteImport.update({
   path: '/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DryRunRoute = DryRunRouteImport.update({
+  id: '/dry-run',
+  path: '/dry-run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CallsRoute = CallsRouteImport.update({
   id: '/calls',
   path: '/calls',
@@ -44,6 +50,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calls': typeof CallsRoute
+  '/dry-run': typeof DryRunRoute
   '/new': typeof NewRoute
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calls': typeof CallsRoute
+  '/dry-run': typeof DryRunRoute
   '/new': typeof NewRoute
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
@@ -59,21 +67,23 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/calls': typeof CallsRoute
+  '/dry-run': typeof DryRunRoute
   '/new': typeof NewRoute
   '/quotes': typeof QuotesRoute
   '/report': typeof ReportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/calls' | '/new' | '/quotes' | '/report'
+  fullPaths: '/' | '/calls' | '/dry-run' | '/new' | '/quotes' | '/report'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/calls' | '/new' | '/quotes' | '/report'
-  id: '__root__' | '/' | '/calls' | '/new' | '/quotes' | '/report'
+  to: '/' | '/calls' | '/dry-run' | '/new' | '/quotes' | '/report'
+  id: '__root__' | '/' | '/calls' | '/dry-run' | '/new' | '/quotes' | '/report'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CallsRoute: typeof CallsRoute
+  DryRunRoute: typeof DryRunRoute
   NewRoute: typeof NewRoute
   QuotesRoute: typeof QuotesRoute
   ReportRoute: typeof ReportRoute
@@ -102,6 +112,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dry-run': {
+      id: '/dry-run'
+      path: '/dry-run'
+      fullPath: '/dry-run'
+      preLoaderRoute: typeof DryRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/calls': {
       id: '/calls'
       path: '/calls'
@@ -122,6 +139,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CallsRoute: CallsRoute,
+  DryRunRoute: DryRunRoute,
   NewRoute: NewRoute,
   QuotesRoute: QuotesRoute,
   ReportRoute: ReportRoute,
