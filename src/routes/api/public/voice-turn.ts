@@ -88,17 +88,6 @@ function buildTwiml(opts: {
 </Response>`;
 }
 
-  const tail = opts.nextUrl
-    ? `<Gather input="speech" action="${esc(opts.nextUrl)}" method="POST" speechTimeout="auto" language="en-US" actionOnEmptyResult="true"/>`
-    : `<Pause length="1"/><Hangup/>`;
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  ${plays}
-  ${tail}
-</Response>`;
-}
-
 export const Route = createFileRoute("/api/public/voice-turn")({
   server: {
     handlers: {
