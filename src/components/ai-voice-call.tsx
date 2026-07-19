@@ -4,7 +4,7 @@ import { placeAiVoiceCall, getCallStatus } from "@/lib/voice-call.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneCall, Loader2, CheckCircle2, XCircle, Radio } from "lucide-react";
-import { getVoiceSettings } from "@/lib/voice-settings";
+import { readVoiceSettings } from "@/lib/voice-settings";
 
 const TERMINAL = new Set(["completed", "failed", "busy", "no-answer", "canceled"]);
 const DEFAULT_FROM = "+14472288335";
@@ -59,14 +59,14 @@ export function AiVoiceCall({
     setError(null);
     setPlacing(true);
     try {
-      const vs = getVoiceSettings();
+      const vs = readVoiceSettings();
       const r = await place({
         data: {
           to: to.trim(),
           from: from.trim(),
           script: script.trim(),
           origin: window.location.origin,
-          voiceId: vs.agentVoiceId,
+          voiceId: vs.agentVoice,
           speed: vs.speed,
         },
       });
