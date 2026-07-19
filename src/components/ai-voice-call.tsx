@@ -241,6 +241,39 @@ export function AiVoiceCall({
         </div>
       )}
 
+      {recordings.length > 0 && (
+        <div>
+          <div className="mb-2 text-xs font-semibold text-muted-foreground">
+            Call recording{recordings.length > 1 ? "s" : ""}
+          </div>
+          <div className="space-y-2">
+            {recordings.map((r) => (
+              <div key={r.sid} className="rounded-md border bg-background/50 p-3 space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="font-mono">{r.sid}</span>
+                  <span>
+                    {r.duration ? `${r.duration}s` : r.status}
+                    {" · "}
+                    {new Date(r.dateCreated).toLocaleTimeString()}
+                  </span>
+                </div>
+                <audio controls preload="metadata" src={r.url} className="w-full h-9" />
+                <div className="flex justify-end">
+                  <a
+                    href={r.url}
+                    download={`${r.sid}.mp3`}
+                    className="text-[11px] text-primary hover:underline"
+                  >
+                    Download MP3
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+
       {turns.length > 0 && (
         <div>
           <div className="mb-2 text-xs font-semibold text-muted-foreground">Live transcript</div>
