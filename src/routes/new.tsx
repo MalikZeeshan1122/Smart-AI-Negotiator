@@ -36,9 +36,50 @@ const services = [
   { id: "contractor", label: "Contractors", icon: Building2, tag: "Soon" },
 ];
 
+const MAX_BYTES = 20 * 1024 * 1024;
+const ACCEPT = ".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg";
+
+type UploadedFile = { id: string; name: string; size: number; type: string };
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function NewNegotiation() {
   const [step, setStep] = useState(1);
   const [service, setService] = useState("moving");
+  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = (incoming: FileList | File[]) => {
+    setUploadError(null);
+    const accepted: UploadedFile[] = [];
+    for (const f of Array.from(incoming)) {
+      if (f.size > MAX_BYTES) {
+        setUploadError(`${f.name} exceeds 20MB limit`);
+        continue;
+      }
+      const ok = /pdf|png|jpe?g/i.test(f.type) || /\.(pdf|png|jpe?g)$/i.test(f.name);
+      if (!ok) {
+        setUploadError(`${f.name} is not a supported file type`);
+        continue;
+      }
+      accepted.push({
+        id: `${f.name}-${f.size}-${crypto.randomUUID()}`,
+        name: f.name,
+        size: f.size,
+        type: f.type,
+      });
+    }
+    if (accepted.length) setFiles((prev) => [...prev, ...accepted]);
+  };
+
+  const removeFile = (id: string) =>
+    setFiles((prev) => prev.filter((f) => f.id !== id));
 
   return (
     <AppShell>
