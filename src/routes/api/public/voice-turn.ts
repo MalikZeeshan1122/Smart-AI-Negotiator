@@ -103,6 +103,7 @@ export const Route = createFileRoute("/api/public/voice-turn")({
         const voiceId = url.searchParams.get("voiceId") ?? "";
         const speed = url.searchParams.get("speed") ?? "";
         const maxTurns = Math.max(2, Math.min(20, Number(url.searchParams.get("maxTurns") ?? "8")));
+        const lang = normalizeLanguage(url.searchParams.get("lang"));
         const origin = `${url.protocol}//${url.host}`;
 
         const state = ensureState(callSid, ctx);
