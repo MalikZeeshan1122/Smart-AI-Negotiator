@@ -3,7 +3,29 @@ import { AppShell } from "@/components/app-shell";
 import { activeJob } from "@/lib/mock-data";
 import { TrustPill, RiskBadge, SectionTitle } from "@/components/kit";
 import { Button } from "@/components/ui/button";
-import { Check, Download, Trophy, AlertTriangle, Quote as QuoteIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Check,
+  Download,
+  Trophy,
+  AlertTriangle,
+  Quote as QuoteIcon,
+  ShieldCheck,
+  Lock,
+  CheckCircle2,
+} from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/report")({
   head: () => ({
